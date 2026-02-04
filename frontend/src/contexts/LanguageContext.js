@@ -147,6 +147,7 @@ const translations = {
     // Navigation
     nav_dashboard: "Dashboard",
     nav_shop: "Shop",
+    nav_pets: "Pets",
     nav_community: "Community",
     nav_profile: "Profile",
     nav_settings: "Settings",
