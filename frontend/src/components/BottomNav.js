@@ -1,14 +1,14 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Home, ShoppingBag, Users, User, Settings } from 'lucide-react';
+import { Home, ShoppingBag, Heart, Users, User } from 'lucide-react';
 
 const navItems = [
   { path: '/dashboard', icon: Home, label: 'nav_dashboard' },
   { path: '/shop', icon: ShoppingBag, label: 'nav_shop' },
+  { path: '/pets', icon: Heart, label: 'nav_pets' },
   { path: '/community', icon: Users, label: 'nav_community' },
   { path: '/profile', icon: User, label: 'nav_profile' },
-  { path: '/settings', icon: Settings, label: 'nav_settings' },
 ];
 
 export const BottomNav = () => {
