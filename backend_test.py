@@ -253,6 +253,34 @@ print('User ID: ' + userId);
             print(f"   Focus minutes: {response.get('total_focus_minutes', 0)}")
         return success
 
+    def test_daily_quests(self):
+        """Test daily quests endpoint"""
+        success, response = self.run_test(
+            "Daily Quests",
+            "GET",
+            "quests/daily",
+            200
+        )
+        if success and isinstance(response, list):
+            print(f"   Found {len(response)} daily quests")
+            for quest in response:
+                print(f"   - {quest.get('title_en', 'Unknown')}: {quest.get('progress', 0)}/{quest.get('target', 0)}")
+        return success
+
+    def test_achievements(self):
+        """Test achievements endpoint"""
+        success, response = self.run_test(
+            "Achievements",
+            "GET", 
+            "achievements",
+            200
+        )
+        if success and isinstance(response, list):
+            print(f"   Found {len(response)} achievements")
+            earned_count = len([a for a in response if a.get('earned', False)])
+            print(f"   Earned: {earned_count}/{len(response)}")
+        return success
+
     def cleanup_test_data(self):
         """Clean up test data from MongoDB"""
         print(f"\n🧹 Cleaning up test data...")
