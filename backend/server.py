@@ -250,7 +250,7 @@ async def get_todos(request: Request):
     todos = await db.todos.find({"user_id": user.user_id}, {"_id": 0}).to_list(100)
     return todos
 
-@api_router.post("/todos", response_model=Todo)
+@api_router.post("/todos", response_model=Todo, status_code=201)
 async def create_todo(todo: TodoCreate, request: Request):
     user = await get_current_user(request)
     todo_doc = {
