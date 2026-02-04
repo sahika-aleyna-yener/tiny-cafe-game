@@ -19,6 +19,7 @@ const translations = {
     // Navigation
     nav_dashboard: "Ana Sayfa",
     nav_shop: "Mağaza",
+    nav_pets: "Dostlar",
     nav_community: "Topluluk",
     nav_profile: "Profil",
     nav_settings: "Ayarlar",
