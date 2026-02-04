@@ -139,10 +139,14 @@ export default function Dashboard() {
     setIsPlaying(false);
     
     if (sessionId && startTimeRef.current) {
-      const elapsedMinutes = Math.floor((Date.now() - startTimeRef.current) / 60000);
-      if (elapsedMinutes > 0) {
+      // Show ad modal even for short sessions (at least 10 seconds)
+      const elapsedSeconds = Math.floor((Date.now() - startTimeRef.current) / 1000);
+      if (elapsedSeconds >= 10) {
         setShowAdModal(true);
         setAdCountdown(5);
+      } else {
+        // If less than 10 seconds, complete without ad offer
+        completeSession(false);
       }
     }
   };
