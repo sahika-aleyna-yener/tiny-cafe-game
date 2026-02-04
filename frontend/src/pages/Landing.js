@@ -3,7 +3,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Coffee, Clock, Users, Music } from 'lucide-react';
 
-const MASCOT_IMAGE = "https://images.unsplash.com/photo-1766465182486-1d558f382494?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NDh8MHwxfHNlYXJjaHwxfHxjdXRlJTIwZmx1ZmZ5JTIwdGVkZHklMjBiZWFyJTIwdG95fGVufDB8fHx8MTc3MDE5NzUyMnww&ixlib=rb-4.1.0&q=85";
+const MASCOT_IMAGE = "/assets/pets/poncik-bear.jpg";
 
 const features = [
   { icon: Clock, key: 'landing_feature_1' },
