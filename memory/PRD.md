@@ -8,77 +8,63 @@ Bu bir cozy app. Kullanıcı app'i açtığında Poncik (temaya uygun maskot) "M
 2. **Uzaktan Çalışan**: Evden çalışırken konsantre olmak isteyen, sakin ortam arayan
 3. **Hobi Öğrenen**: Yeni bir şey öğrenirken zaman takibi yapmak isteyen
 
-## Core Requirements (Static)
-- [x] Google OAuth ile giriş (Emergent Auth)
-- [x] Pomodoro timer (25dk odak, 5dk/15dk mola)
-- [x] Todo list yönetimi
-- [x] Kredi kazanma sistemi (dakika başına 1 kredi)
-- [x] 2x kredi için reklam sistemi (mock)
-- [x] Mağaza (içecek/tatlı satın alma)
-- [x] Arkadaş davet (+25 kredi bonus)
-- [x] Topluluk leaderboard
-- [x] Müzik player (lofi/ambient)
-- [x] Seviye ve XP sistemi
-- [x] Streak takibi
-- [x] Rozet sistemi
-- [x] TR/EN dil desteği
-- [x] Açık/Koyu tema
-- [x] Evcil hayvan koleksiyonu (YENİ)
-
 ## Architecture
 - **Frontend**: React + Tailwind CSS + Shadcn/UI + Framer Motion
 - **Backend**: FastAPI + MongoDB
 - **Auth**: Emergent Google OAuth
-- **Styling**: Cozy cafe theme (Fredoka + Nunito fonts)
+- **Styling**: Pixel Art Cozy Cafe theme (Fredoka + Nunito + JetBrains Mono fonts)
 - **Assets**: tiny-cafe GitHub repo görselleri
 
 ## What's Been Implemented
 
 ### 2026-02-04 - Initial MVP
-- User authentication with session management
-- Todo CRUD endpoints
-- Focus session tracking with credit calculation
-- Shop items and purchase system
-- Community leaderboard and friends
-- Music tracks endpoint
-- Badges and earned badges
-- User stats and settings
+- Core authentication, timer, todo, credit, shop, community, badges systems
 
-### 2026-02-04 - Visual Update (tiny-cafe integration)
-- Poncik maskot - sevimli ördek karakteri
-- Shop içecekleri - Latte, Cappuccino, Mocha, Matcha, Hot Chocolate, Chai Latte, Espresso, Caramel Latte, Strawberry Smoothie, Lemonade
-- Shop tatlıları - Croissant, Donut, Cupcake, Macaron, Chocolate Cake, Cheesecake, Ice Cream, Profiterole, Crème Brûlée
-- Yeni Pets sayfası - 12 farklı evcil hayvan (Poncik, Bunny, Cat, Puppy, Hamster, Kitten, Fox, Owl, Panda, Penguin, Raccoon, Squirrel)
-- Görsel varlıklar /assets/drinks/ ve /assets/desserts/ klasörlerinde
+### 2026-02-04 - Pixel Art UI Redesign (Latest)
+**Ana UI Değişiklikleri:**
+- Pixel art cafe arka planları (5 mevsimsel tema: Sakura, Spring, Summer, Autumn, Winter)
+- "Ders Çalışmaya Başla" butonu üst bar'da
+- 🪙 KREDİ göstergesi (altın sikke ikonları ile)
+- Mevsim bildirim banner'ı ("Yeni Mevsim! Bahar Şenliği Başladı!")
+- Takvim widget (tarih + mevsim festivali)
+- İçecekler sidebar (tiny-cafe görselleri ile)
+- Tema seçici (5 farklı pixel art cafe arka planı)
+
+**Shop Sayfası:**
+- Pixel art cafe arka planı
+- İçecekler: Latte, Cappuccino, Mocha, Matcha, Hot Chocolate, Chai Latte, Espresso, Caramel Latte, Strawberry Smoothie, Lemonade
+- Tatlılar: Croissant, Donut, Cupcake, Macaron, Chocolate Cake, Cheesecake, Ice Cream, Profiterole, Crème Brûlée
+
+**Assets:**
+- /assets/themes/ - 5 mevsimsel cafe arka planı
+- /assets/drinks/ - İçecek görselleri
+- /assets/desserts/ - Tatlı görselleri
 
 ## Prioritized Backlog
 
 ### P0 (Completed)
 - [x] Core authentication flow
-- [x] Timer functionality
+- [x] Timer functionality with Pomodoro
 - [x] Todo management
 - [x] Credit system
-- [x] Basic shop with real images
-- [x] Pets collection page
+- [x] Shop with real images
+- [x] Pixel art cafe UI redesign
+- [x] Seasonal themes
 
 ### P1 (Future)
-- [ ] Push notifications for break reminders
-- [ ] Sound effects for timer completion
-- [ ] Real ad integration (Google AdMob)
-- [ ] Profile picture upload
-- [ ] Session history with calendar view
-- [ ] Active pet selection (display on dashboard)
+- [ ] Sound effects for interactions
+- [ ] Push notifications
+- [ ] Calendar history view
+- [ ] Active pet selection
 
 ### P2 (Nice to have)
-- [ ] Seasonal themes (Spring, Summer, Fall, Winter)
 - [ ] Custom timer durations
-- [ ] Social sharing of achievements
-- [ ] Offline mode support
-- [ ] Mobile app (React Native)
+- [ ] Social sharing
+- [ ] Offline mode
+- [ ] Mobile app
 
 ## Next Tasks
-1. Active pet selection system - Dashboard'da seçilen pet'i göster
-2. Push notifications ekle (timer bittiğinde)
-3. Ses efektleri ekle
-4. Takvim görünümü ile çalışma geçmişi
-5. Achievement sharing to social media
+1. Ses efektleri ekle (timer başlama/bitme, satın alma)
+2. Animasyonlu pixel art karakterler (cafe'de çalışan insanlar)
+3. Günlük/haftalık görevler sistemi
+4. Achievement paylaşımı
