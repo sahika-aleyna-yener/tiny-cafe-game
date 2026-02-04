@@ -658,6 +658,222 @@ async def get_user_stats(request: Request):
 
 # ==================== ROOT ====================
 
+# ==================== DAILY QUESTS ENDPOINTS ====================
+
+@api_router.get("/quests/daily")
+async def get_daily_quests(request: Request):
+    user = await get_current_user(request)
+    today = datetime.now(timezone.utc).date().isoformat()
+    
+    # Check if user has today's quests
+    user_quests = await db.user_daily_quests.find_one(
+        {"user_id": user.user_id, "date": today},
+        {"_id": 0}
+    )
+    
+    if not user_quests:
+        # Generate new daily quests
+        daily_quests = [
+            {
+                "quest_id": "daily_focus_30",
+                "type": "focus_time",
+                "title_tr": "30 Dakika Odaklan",
+                "title_en": "Focus for 30 Minutes",
+                "description_tr": "Bugün toplam 30 dakika çalış",
+                "description_en": "Study for 30 minutes total today",
+                "target": 30,
+                "progress": 0,
+                "reward_credits": 50,
+                "reward_xp": 100,
+                "completed": False
+            },
+            {
+                "quest_id": "daily_todo_3",
+                "type": "complete_todos",
+                "title_tr": "3 Görev Tamamla",
+                "title_en": "Complete 3 Tasks",
+                "description_tr": "Bugün 3 yapılacak görevi tamamla",
+                "description_en": "Complete 3 to-do items today",
+                "target": 3,
+                "progress": 0,
+                "reward_credits": 30,
+                "reward_xp": 60,
+                "completed": False
+            },
+            {
+                "quest_id": "daily_streak",
+                "type": "maintain_streak",
+                "title_tr": "Seri Devam",
+                "title_en": "Keep Streak",
+                "description_tr": "Günlük serini devam ettir",
+                "description_en": "Continue your daily streak",
+                "target": 1,
+                "progress": 0,
+                "reward_credits": 20,
+                "reward_xp": 40,
+                "completed": False
+            },
+        ]
+        
+        user_quests = {
+            "user_id": user.user_id,
+            "date": today,
+            "quests": daily_quests,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.user_daily_quests.insert_one(user_quests)
+    
+    return user_quests["quests"]
+
+@api_router.post("/quests/claim/{quest_id}")
+async def claim_quest_reward(quest_id: str, request: Request):
+    user = await get_current_user(request)
+    today = datetime.now(timezone.utc).date().isoformat()
+    
+    user_quests = await db.user_daily_quests.find_one(
+        {"user_id": user.user_id, "date": today},
+        {"_id": 0}
+    )
+    
+    if not user_quests:
+        raise HTTPException(status_code=404, detail="No quests found")
+    
+    quest = None
+    for q in user_quests["quests"]:
+        if q["quest_id"] == quest_id:
+            quest = q
+            break
+    
+    if not quest:
+        raise HTTPException(status_code=404, detail="Quest not found")
+    
+    if quest["completed"]:
+        raise HTTPException(status_code=400, detail="Quest already claimed")
+    
+    if quest["progress"] < quest["target"]:
+        raise HTTPException(status_code=400, detail="Quest not completed")
+    
+    # Mark as completed
+    await db.user_daily_quests.update_one(
+        {"user_id": user.user_id, "date": today, "quests.quest_id": quest_id},
+        {"$set": {"quests.$.completed": True}}
+    )
+    
+    # Give rewards
+    await db.users.update_one(
+        {"user_id": user.user_id},
+        {"$inc": {"credits": quest["reward_credits"], "xp": quest["reward_xp"]}}
+    )
+    
+    return {
+        "message": "Quest completed!",
+        "credits_earned": quest["reward_credits"],
+        "xp_earned": quest["reward_xp"]
+    }
+
+# Helper to update quest progress
+async def update_quest_progress(user_id: str, quest_type: str, amount: int = 1):
+    today = datetime.now(timezone.utc).date().isoformat()
+    
+    user_quests = await db.user_daily_quests.find_one(
+        {"user_id": user_id, "date": today}
+    )
+    
+    if user_quests:
+        for i, quest in enumerate(user_quests["quests"]):
+            if quest["type"] == quest_type and not quest["completed"]:
+                new_progress = min(quest["progress"] + amount, quest["target"])
+                await db.user_daily_quests.update_one(
+                    {"user_id": user_id, "date": today},
+                    {"$set": {f"quests.{i}.progress": new_progress}}
+                )
+
+# ==================== ACHIEVEMENTS ENDPOINTS ====================
+
+@api_router.get("/achievements")
+async def get_achievements(request: Request):
+    user = await get_current_user(request)
+    
+    achievements = [
+        {"id": "first_focus", "name_tr": "İlk Adım", "name_en": "First Step", "desc_tr": "İlk odaklanma seansını tamamla", "desc_en": "Complete your first focus session", "icon": "🌟", "type": "total_minutes", "target": 1, "reward": 50},
+        {"id": "hour_hero", "name_tr": "Saat Kahramanı", "name_en": "Hour Hero", "desc_tr": "Toplam 1 saat odaklan", "desc_en": "Focus for 1 hour total", "icon": "⏰", "type": "total_minutes", "target": 60, "reward": 100},
+        {"id": "focus_master", "name_tr": "Odak Ustası", "name_en": "Focus Master", "desc_tr": "Toplam 10 saat odaklan", "desc_en": "Focus for 10 hours total", "icon": "🎯", "type": "total_minutes", "target": 600, "reward": 500},
+        {"id": "streak_3", "name_tr": "Seri Başlangıcı", "name_en": "Streak Starter", "desc_tr": "3 günlük seri yap", "desc_en": "Achieve 3-day streak", "icon": "🔥", "type": "streak", "target": 3, "reward": 75},
+        {"id": "streak_7", "name_tr": "Haftalık Savaşçı", "name_en": "Weekly Warrior", "desc_tr": "7 günlük seri yap", "desc_en": "Achieve 7-day streak", "icon": "💪", "type": "streak", "target": 7, "reward": 200},
+        {"id": "streak_30", "name_tr": "Aylık Efsane", "name_en": "Monthly Legend", "desc_tr": "30 günlük seri yap", "desc_en": "Achieve 30-day streak", "icon": "👑", "type": "streak", "target": 30, "reward": 1000},
+        {"id": "level_5", "name_tr": "Çırak", "name_en": "Apprentice", "desc_tr": "Seviye 5'e ulaş", "desc_en": "Reach level 5", "icon": "⭐", "type": "level", "target": 5, "reward": 150},
+        {"id": "level_10", "name_tr": "Uzman", "name_en": "Expert", "desc_tr": "Seviye 10'a ulaş", "desc_en": "Reach level 10", "icon": "🏆", "type": "level", "target": 10, "reward": 400},
+        {"id": "collector", "name_tr": "Koleksiyoncu", "name_en": "Collector", "desc_tr": "10 ürün satın al", "desc_en": "Purchase 10 items", "icon": "🛍️", "type": "purchases", "target": 10, "reward": 200},
+        {"id": "social", "name_tr": "Sosyal Kelebek", "name_en": "Social Butterfly", "desc_tr": "5 arkadaş ekle", "desc_en": "Add 5 friends", "icon": "🦋", "type": "friends", "target": 5, "reward": 150},
+    ]
+    
+    # Get user's earned achievements
+    earned = await db.user_achievements.find({"user_id": user.user_id}, {"_id": 0}).to_list(100)
+    earned_ids = [e["achievement_id"] for e in earned]
+    
+    # Calculate progress for each achievement
+    for ach in achievements:
+        ach["earned"] = ach["id"] in earned_ids
+        
+        if ach["type"] == "total_minutes":
+            ach["progress"] = min(user.total_focus_minutes, ach["target"])
+        elif ach["type"] == "streak":
+            ach["progress"] = min(user.streak_days, ach["target"])
+        elif ach["type"] == "level":
+            ach["progress"] = min(user.level, ach["target"])
+        elif ach["type"] == "purchases":
+            ach["progress"] = min(len(user.owned_items), ach["target"])
+        elif ach["type"] == "friends":
+            friend_count = await db.friendships.count_documents({
+                "$or": [{"user_id": user.user_id}, {"friend_id": user.user_id}],
+                "status": "accepted"
+            })
+            ach["progress"] = min(friend_count, ach["target"])
+    
+    return achievements
+
+@api_router.post("/achievements/claim/{achievement_id}")
+async def claim_achievement(achievement_id: str, request: Request):
+    user = await get_current_user(request)
+    
+    # Check if already earned
+    existing = await db.user_achievements.find_one({
+        "user_id": user.user_id,
+        "achievement_id": achievement_id
+    })
+    
+    if existing:
+        raise HTTPException(status_code=400, detail="Achievement already claimed")
+    
+    # Get achievements list
+    achievements_resp = await get_achievements(request)
+    achievement = None
+    for ach in achievements_resp:
+        if ach["id"] == achievement_id:
+            achievement = ach
+            break
+    
+    if not achievement:
+        raise HTTPException(status_code=404, detail="Achievement not found")
+    
+    if achievement["progress"] < achievement["target"]:
+        raise HTTPException(status_code=400, detail="Achievement not completed")
+    
+    # Record achievement
+    await db.user_achievements.insert_one({
+        "user_id": user.user_id,
+        "achievement_id": achievement_id,
+        "earned_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    # Give reward
+    await db.users.update_one(
+        {"user_id": user.user_id},
+        {"$inc": {"credits": achievement["reward"]}}
+    )
+    
+    return {"message": "Achievement claimed!", "credits_earned": achievement["reward"]}
+
 @api_router.get("/")
 async def root():
     return {"message": "PoncikFocus API", "version": "1.0.0"}
