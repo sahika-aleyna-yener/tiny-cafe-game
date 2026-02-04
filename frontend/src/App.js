@@ -12,6 +12,7 @@ import Landing from "./pages/Landing";
 import AuthCallback from "./pages/AuthCallback";
 import Dashboard from "./pages/Dashboard";
 import Shop from "./pages/Shop";
+import Pets from "./pages/Pets";
 import Community from "./pages/Community";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
@@ -44,6 +45,15 @@ const AppRouter = () => {
         element={
           <ProtectedRoute>
             <Shop />
+            <BottomNav />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/pets"
+        element={
+          <ProtectedRoute>
+            <Pets />
             <BottomNav />
           </ProtectedRoute>
         }
