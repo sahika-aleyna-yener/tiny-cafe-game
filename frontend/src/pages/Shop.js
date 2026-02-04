@@ -94,8 +94,17 @@ export default function Shop() {
         className={`shop-item ${item.locked ? 'locked' : ''}`}
         data-testid={`shop-item-${item.item_id}`}
       >
-        <div className="shop-item-icon">
-          {item.image_url}
+        <div className="w-20 h-20 rounded-2xl overflow-hidden mb-3 bg-[var(--surface-highlight)]">
+          {item.image_url.startsWith('/') ? (
+            <img 
+              src={item.image_url} 
+              alt={getName(item)}
+              className="w-full h-full object-cover"
+              onError={(e) => { e.target.style.display = 'none'; }}
+            />
+          ) : (
+            <span className="text-4xl flex items-center justify-center h-full">{item.image_url}</span>
+          )}
         </div>
         
         <h3 className="font-bold text-[var(--text-main)] text-center mb-1">
