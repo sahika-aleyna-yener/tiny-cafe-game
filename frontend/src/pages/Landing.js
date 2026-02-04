@@ -1,15 +1,13 @@
 import { motion } from 'framer-motion';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
-import { Coffee, Clock, Users, Music } from 'lucide-react';
-
-const MASCOT_IMAGE = "https://images.unsplash.com/photo-1720351458123-13e188604960?w=400&h=400&fit=crop";
+import { Coffee, Clock, Users, Music, Sparkles } from 'lucide-react';
 
 const features = [
-  { icon: Clock, key: 'landing_feature_1' },
-  { icon: Coffee, key: 'landing_feature_2' },
-  { icon: Users, key: 'landing_feature_3' },
-  { icon: Music, key: 'landing_feature_4' },
+  { icon: Clock, key: 'landing_feature_1', emoji: '⏰' },
+  { icon: Coffee, key: 'landing_feature_2', emoji: '☕' },
+  { icon: Users, key: 'landing_feature_3', emoji: '👥' },
+  { icon: Music, key: 'landing_feature_4', emoji: '🎵' },
 ];
 
 export default function Landing() {
@@ -17,81 +15,112 @@ export default function Landing() {
   const { login } = useAuth();
 
   return (
-    <div className="min-h-screen bg-[var(--background)] grain-overlay overflow-hidden">
+    <div 
+      className="min-h-screen relative overflow-hidden"
+      style={{
+        backgroundImage: 'url(/assets/themes/sakura-cafe.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        imageRendering: 'auto'
+      }}
+    >
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/50" />
+
       {/* Language toggle */}
-      <div className="absolute top-4 right-4 z-10">
+      <div className="absolute top-4 right-4 z-20">
         <button
           onClick={toggleLanguage}
-          className="px-4 py-2 rounded-full bg-[var(--surface)] text-[var(--text-main)] font-semibold text-sm shadow-md hover:shadow-lg transition-shadow"
+          className="px-4 py-2 rounded-lg bg-[#F5E6D3] text-[#5D4E37] font-bold text-sm shadow-lg border-2 border-[#D4C4A8] hover:bg-[#E8D9C6] transition-colors"
+          style={{ fontFamily: "'Fredoka', sans-serif" }}
           data-testid="language-toggle"
         >
-          {language === 'tr' ? 'EN' : 'TR'}
+          {language === 'tr' ? '🇬🇧 EN' : '🇹🇷 TR'}
         </button>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-12 md:py-20">
-        {/* Hero Section */}
+      <div className="relative z-10 max-w-4xl mx-auto px-4 py-12 md:py-16 flex flex-col items-center justify-center min-h-screen">
+        
+        {/* Main Card */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          className="bg-[#F5E6D3]/95 rounded-2xl border-4 border-[#D4C4A8] shadow-2xl p-8 md:p-12 text-center max-w-lg w-full"
         >
-          {/* Mascot */}
+          {/* Logo/Title */}
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.2 }}
-            className="mb-8 inline-block"
+            transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
+            className="mb-6"
           >
-            <div className="relative">
-              <motion.img
-                src={MASCOT_IMAGE}
-                alt="Poncik"
-                className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover border-4 border-[var(--surface)] shadow-xl"
-                animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              />
+            <div className="inline-flex items-center gap-2 bg-[#D4896A] px-6 py-3 rounded-xl border-b-4 border-[#A66B4F] mb-4">
+              <span className="text-3xl">☕</span>
+              <h1 
+                className="text-2xl md:text-3xl font-bold text-white"
+                style={{ fontFamily: "'Fredoka', sans-serif" }}
+              >
+                PoncikFocus
+              </h1>
+              <span className="text-3xl">📚</span>
+            </div>
+          </motion.div>
+
+          {/* Greeting */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+          >
+            <h2 
+              className="text-4xl md:text-5xl font-bold text-[#5D4E37] mb-3"
+              style={{ fontFamily: "'Fredoka', sans-serif" }}
+            >
+              {t('landing_title')}
+            </h2>
+            <p className="text-lg text-[#8B6B4D] mb-8">
+              {t('landing_subtitle')}
+            </p>
+          </motion.div>
+
+          {/* Mascot Area */}
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", delay: 0.5 }}
+            className="mb-8"
+          >
+            <div className="inline-block relative">
+              <motion.div
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                className="text-8xl"
+              >
+                🐻
+              </motion.div>
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ delay: 0.5, type: "spring" }}
-                className="absolute -bottom-2 -right-2 bg-[var(--secondary)] text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg"
+                transition={{ delay: 0.8 }}
+                className="absolute -bottom-2 -right-2 bg-[#81C784] text-white text-sm px-3 py-1 rounded-full font-bold shadow-lg"
+                style={{ fontFamily: "'Fredoka', sans-serif" }}
               >
                 Poncik
               </motion.div>
             </div>
           </motion.div>
 
-          {/* Title */}
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="text-5xl md:text-6xl font-bold text-[var(--text-main)] mb-4"
-            style={{ fontFamily: "'Fredoka', sans-serif" }}
-          >
-            {t('landing_title')}
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="text-lg md:text-xl text-[var(--text-muted)] mb-8"
-          >
-            {t('landing_subtitle')}
-          </motion.p>
-
-          {/* CTA Button */}
+          {/* Login Button */}
           <motion.button
             onClick={login}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.5 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="btn-primary text-lg px-8 py-4 inline-flex items-center gap-3"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            whileHover={{ scale: 1.03, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full flex items-center justify-center gap-3 px-8 py-4 bg-[#D4896A] text-white text-lg font-bold rounded-xl border-b-4 border-[#A66B4F] hover:bg-[#E09A7A] transition-colors shadow-lg"
+            style={{ fontFamily: "'Fredoka', sans-serif" }}
             data-testid="login-google-btn"
           >
             <svg className="w-6 h-6" viewBox="0 0 24 24">
@@ -106,28 +135,29 @@ export default function Landing() {
 
         {/* Features Section */}
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          className="mt-8 w-full max-w-2xl"
         >
-          <h2 className="text-2xl font-bold text-center text-[var(--text-main)] mb-8" style={{ fontFamily: "'Fredoka', sans-serif" }}>
-            {t('landing_features_title')}
-          </h2>
+          <h3 
+            className="text-xl font-bold text-white text-center mb-4 drop-shadow-lg"
+            style={{ fontFamily: "'Fredoka', sans-serif" }}
+          >
+            ✨ {t('landing_features_title')} ✨
+          </h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-3">
             {features.map((feature, index) => (
               <motion.div
                 key={feature.key}
                 initial={{ opacity: 0, x: index % 2 === 0 ? -20 : 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.7 + index * 0.1 }}
-                whileHover={{ scale: 1.02, y: -4 }}
-                className="cozy-card flex items-center gap-4 cursor-default"
+                transition={{ delay: 0.9 + index * 0.1 }}
+                className="bg-[#F5E6D3]/90 rounded-xl border-2 border-[#D4C4A8] p-4 flex items-center gap-3"
               >
-                <div className="w-14 h-14 rounded-2xl bg-[var(--primary)] bg-opacity-10 flex items-center justify-center flex-shrink-0">
-                  <feature.icon className="w-7 h-7 text-[var(--primary)]" />
-                </div>
-                <p className="text-[var(--text-main)] font-medium">
+                <span className="text-2xl">{feature.emoji}</span>
+                <p className="text-sm text-[#5D4E37] font-medium">
                   {t(feature.key)}
                 </p>
               </motion.div>
@@ -135,18 +165,15 @@ export default function Landing() {
           </div>
         </motion.div>
 
-        {/* App name footer */}
+        {/* Footer */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-          className="text-center mt-16"
+          transition={{ delay: 1.2 }}
+          className="mt-8 text-center"
         >
-          <p className="text-3xl font-bold text-[var(--primary)]" style={{ fontFamily: "'Fredoka', sans-serif" }}>
-            {t('app_name')}
-          </p>
-          <p className="text-sm text-[var(--text-muted)] mt-2">
-            Your cozy study companion
+          <p className="text-white/80 text-sm drop-shadow">
+            {language === 'tr' ? 'Senin rahat çalışma arkadaşın' : 'Your cozy study companion'}
           </p>
         </motion.div>
       </div>
