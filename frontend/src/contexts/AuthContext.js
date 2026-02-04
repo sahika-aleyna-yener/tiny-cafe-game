@@ -9,8 +9,15 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [authChecked, setAuthChecked] = useState(false);
 
   const checkAuth = useCallback(async () => {
+    // Don't check if we already have a user
+    if (user) {
+      setLoading(false);
+      return;
+    }
+    
     try {
       const response = await fetch(`${API}/auth/me`, {
         credentials: 'include',
@@ -19,7 +26,21 @@ export const AuthProvider = ({ children }) => {
       if (response.ok) {
         const userData = await response.json();
         setUser(userData);
+        // Store in localStorage as backup
+        localStorage.setItem('poncik_user', JSON.stringify(userData));
       } else {
+        // Check localStorage for cached user
+        const cachedUser = localStorage.getItem('poncik_user');
+        if (cachedUser) {
+          // Try to validate cached user
+          try {
+            const parsed = JSON.parse(cachedUser);
+            // If we have cached user but API failed, clear it
+            localStorage.removeItem('poncik_user');
+          } catch (e) {
+            localStorage.removeItem('poncik_user');
+          }
+        }
         setUser(null);
       }
     } catch (err) {
@@ -27,12 +48,16 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
     } finally {
       setLoading(false);
+      setAuthChecked(true);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
+    // Only check auth once on mount
+    if (!authChecked) {
+      checkAuth();
+    }
+  }, [checkAuth, authChecked]);
 
   const login = () => {
     // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
@@ -56,6 +81,9 @@ export const AuthProvider = ({ children }) => {
       
       const userData = await response.json();
       setUser(userData);
+      // Store in localStorage
+      localStorage.setItem('poncik_user', JSON.stringify(userData));
+      setAuthChecked(true);
       return userData;
     } catch (err) {
       setError(err.message);
@@ -75,6 +103,7 @@ export const AuthProvider = ({ children }) => {
       console.error('Logout error:', err);
     } finally {
       setUser(null);
+      localStorage.removeItem('poncik_user');
     }
   };
 
@@ -87,6 +116,7 @@ export const AuthProvider = ({ children }) => {
       if (response.ok) {
         const userData = await response.json();
         setUser(userData);
+        localStorage.setItem('poncik_user', JSON.stringify(userData));
         return userData;
       }
     } catch (err) {
@@ -107,6 +137,7 @@ export const AuthProvider = ({ children }) => {
       refreshUser,
       checkAuth,
       isAuthenticated: !!user,
+      authChecked,
     }}>
       {children}
     </AuthContext.Provider>
