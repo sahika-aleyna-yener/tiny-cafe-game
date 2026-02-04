@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'framer-motion';
 
-const MASCOT_IMAGE = "/assets/pets/poncik-bear.jpg";
+const MASCOT_IMAGE = "https://images.unsplash.com/photo-1720351458123-13e188604960?w=400&h=400&fit=crop";
 
 export default function AuthCallback() {
   const navigate = useNavigate();
