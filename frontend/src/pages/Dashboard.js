@@ -2,25 +2,34 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
-import { Play, Pause, Square, Plus, Trash2, Check, Coffee, Flame, Star, Volume2, VolumeX, SkipForward, Lock } from 'lucide-react';
+import { Play, Square, Plus, Trash2, Coffee, Flame, Volume2, VolumeX, Lock, Calendar, Gift, Sparkles, X, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { Checkbox } from '../components/ui/checkbox';
-import { Progress } from '../components/ui/progress';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-const MASCOT_IMAGE = "https://images.unsplash.com/photo-1720351458123-13e188604960?w=400&h=400&fit=crop";
+// Seasonal themes
+const THEMES = {
+  sakura: { bg: '/assets/themes/sakura-cafe.jpg', name_tr: 'Sakura Festivali', name_en: 'Sakura Festival' },
+  spring: { bg: '/assets/themes/spring-cafe.jpg', name_tr: 'Bahar', name_en: 'Spring' },
+  summer: { bg: '/assets/themes/summer-cafe.jpg', name_tr: 'Yaz', name_en: 'Summer' },
+  autumn: { bg: '/assets/themes/autumn-cafe.jpg', name_tr: 'Sonbahar', name_en: 'Autumn' },
+  winter: { bg: '/assets/themes/winter-cafe.jpg', name_tr: 'Kış', name_en: 'Winter' },
+};
 
 const TIMER_MODES = {
-  focus: { duration: 25, label: 'timer_focus' },
-  shortBreak: { duration: 5, label: 'timer_short_break' },
-  longBreak: { duration: 15, label: 'timer_long_break' },
+  focus: { duration: 25, label_tr: 'Odaklanma', label_en: 'Focus' },
+  shortBreak: { duration: 5, label_tr: 'Kısa Mola', label_en: 'Short Break' },
+  longBreak: { duration: 15, label_tr: 'Uzun Mola', label_en: 'Long Break' },
 };
 
 export default function Dashboard() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { user, refreshUser } = useAuth();
+  
+  // Theme state
+  const [currentTheme, setCurrentTheme] = useState('sakura');
   
   // Timer state
   const [timerMode, setTimerMode] = useState('focus');
@@ -34,21 +43,25 @@ export default function Dashboard() {
   // Todos state
   const [todos, setTodos] = useState([]);
   const [newTodo, setNewTodo] = useState('');
+  const [showTodos, setShowTodos] = useState(false);
   
   // Music state
   const [tracks, setTracks] = useState([]);
   const [currentTrack, setCurrentTrack] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, setVolume] = useState(0.5);
   const audioRef = useRef(null);
   
-  // Mascot state
-  const [mascotMessage, setMascotMessage] = useState('mascot_welcome');
+  // Shop items for sidebar
+  const [shopItems, setShopItems] = useState([]);
+  
+  // Notification state
+  const [notification, setNotification] = useState({ show: true, message_tr: 'Yeni Mevsim! Bahar Şenliği Başladı!', message_en: 'New Season! Spring Festival Started!' });
 
   // Fetch initial data
   useEffect(() => {
     fetchTodos();
     fetchTracks();
+    fetchShopItems();
   }, []);
 
   // Timer logic
@@ -78,10 +91,7 @@ export default function Dashboard() {
   const fetchTodos = async () => {
     try {
       const res = await fetch(`${API}/todos`, { credentials: 'include' });
-      if (res.ok) {
-        const data = await res.json();
-        setTodos(data);
-      }
+      if (res.ok) setTodos(await res.json());
     } catch (err) {
       console.error('Failed to fetch todos:', err);
     }
@@ -98,6 +108,20 @@ export default function Dashboard() {
       }
     } catch (err) {
       console.error('Failed to fetch tracks:', err);
+    }
+  };
+
+  const fetchShopItems = async () => {
+    try {
+      const res = await fetch(`${API}/shop/items`, { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        // Get 4 random drink items for sidebar
+        const drinks = data.filter(i => i.category === 'drinks').slice(0, 4);
+        setShopItems(drinks);
+      }
+    } catch (err) {
+      console.error('Failed to fetch shop items:', err);
     }
   };
 
@@ -120,7 +144,6 @@ export default function Dashboard() {
         setSessionId(data.session_id);
         setIsRunning(true);
         startTimeRef.current = Date.now();
-        setMascotMessage('mascot_start');
         
         if (currentTrack && !currentTrack.locked) {
           audioRef.current?.play();
@@ -139,13 +162,11 @@ export default function Dashboard() {
     setIsPlaying(false);
     
     if (sessionId && startTimeRef.current) {
-      // Show ad modal even for short sessions (at least 10 seconds)
       const elapsedSeconds = Math.floor((Date.now() - startTimeRef.current) / 1000);
       if (elapsedSeconds >= 10) {
         setShowAdModal(true);
         setAdCountdown(5);
       } else {
-        // If less than 10 seconds, complete without ad offer
         completeSession(false);
       }
     }
@@ -155,7 +176,6 @@ export default function Dashboard() {
     setIsRunning(false);
     audioRef.current?.pause();
     setIsPlaying(false);
-    setMascotMessage('mascot_complete');
     setShowAdModal(true);
     setAdCountdown(5);
   };
@@ -175,13 +195,7 @@ export default function Dashboard() {
       
       if (res.ok) {
         const data = await res.json();
-        toast.success(`+${data.credits_earned} ${t('dashboard_credits')}! +${data.xp_earned} XP`);
-        
-        if (data.new_level > (user?.level || 1)) {
-          toast.success(t('session_level_up'));
-          setMascotMessage('mascot_level_up');
-        }
-        
+        toast.success(`+${data.credits_earned} ${language === 'tr' ? 'Kredi' : 'Credits'}! +${data.xp_earned} XP`);
         await refreshUser();
       }
     } catch (err) {
@@ -239,31 +253,15 @@ export default function Dashboard() {
 
   const handleDeleteTodo = async (todoId) => {
     try {
-      await fetch(`${API}/todos/${todoId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
+      await fetch(`${API}/todos/${todoId}`, { method: 'DELETE', credentials: 'include' });
       setTodos(prev => prev.filter(t => t.todo_id !== todoId));
     } catch (err) {
       console.error('Failed to delete todo:', err);
     }
   };
 
-  // Music handlers
-  const handleTrackSelect = (track) => {
-    if (track.locked) {
-      toast.error(t('music_unlock_level', { level: track.unlock_level }));
-      return;
-    }
-    setCurrentTrack(track);
-    if (isPlaying) {
-      audioRef.current?.play();
-    }
-  };
-
   const togglePlayMusic = () => {
     if (!currentTrack || currentTrack.locked) return;
-    
     if (isPlaying) {
       audioRef.current?.pause();
     } else {
@@ -272,262 +270,341 @@ export default function Dashboard() {
     setIsPlaying(!isPlaying);
   };
 
-  const xpProgress = user ? (user.xp / (user.level * 1000)) * 100 : 0;
+  const today = new Date();
+  const dayNames = language === 'tr' 
+    ? ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi']
+    : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const monthNames = language === 'tr'
+    ? ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık']
+    : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+  const getName = (item) => language === 'tr' ? item.name_tr : item.name_en;
 
   return (
-    <div className="min-h-screen bg-[var(--background)] pb-24">
+    <div className="min-h-screen relative overflow-hidden">
       {/* Audio element */}
-      <audio
-        ref={audioRef}
-        src={currentTrack?.url}
-        loop
-        onEnded={() => setIsPlaying(false)}
+      <audio ref={audioRef} src={currentTrack?.url} loop />
+
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ 
+          backgroundImage: `url(${THEMES[currentTheme].bg})`,
+          imageRendering: 'pixelated'
+        }}
       />
+      
+      {/* Overlay for better readability */}
+      <div className="absolute inset-0 bg-black/20" />
 
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Header with stats */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-wrap items-center justify-between gap-4 mb-8"
-        >
-          <div className="flex items-center gap-4">
-            <motion.img
-              src={MASCOT_IMAGE}
-              alt="Poncik"
-              className="w-16 h-16 rounded-full object-cover border-2 border-[var(--surface)]"
-              animate={{ y: [0, -5, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
-            <div>
-              <h1 className="text-2xl font-bold text-[var(--text-main)]" style={{ fontFamily: "'Fredoka', sans-serif" }}>
-                {t('dashboard_greeting')}, {user?.name?.split(' ')[0]}!
-              </h1>
-              <p className="text-[var(--text-muted)] text-sm">{t(mascotMessage)}</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2 bg-[var(--surface)] px-4 py-2 rounded-full">
-              <Coffee className="w-5 h-5 text-[var(--primary)]" />
-              <span className="font-bold text-[var(--text-main)]">{user?.credits || 0}</span>
-            </div>
-            <div className="flex items-center gap-2 bg-[var(--surface)] px-4 py-2 rounded-full">
-              <Flame className="w-5 h-5 text-orange-500" />
-              <span className="font-bold text-[var(--text-main)]">{user?.streak_days || 0}</span>
-            </div>
-            <div className="level-badge" data-testid="level-badge">
-              {user?.level || 1}
-            </div>
-          </div>
-        </motion.div>
-
-        {/* XP Progress */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="mb-8"
-        >
-          <div className="flex justify-between text-sm text-[var(--text-muted)] mb-2">
-            <span>{t('dashboard_level')} {user?.level || 1}</span>
-            <span>{user?.xp || 0} / {(user?.level || 1) * 1000} XP</span>
-          </div>
-          <Progress value={xpProgress} className="h-3" />
-        </motion.div>
-
-        {/* Bento Grid */}
-        <div className="bento-grid">
-          {/* Timer Card - Main */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3 }}
-            className="cozy-card md:row-span-2"
+      {/* Main Content */}
+      <div className="relative z-10 min-h-screen flex flex-col">
+        
+        {/* Top Bar - Pixel Art Style */}
+        <div className="bg-[#8B6B4D]/95 border-b-4 border-[#5D4E37] px-4 py-3 flex items-center justify-between">
+          {/* Start Study Button */}
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={isRunning ? handleStopTimer : handleStartTimer}
+            className={`flex items-center gap-2 px-6 py-3 rounded-lg font-bold text-white shadow-lg border-b-4 transition-all ${
+              isRunning 
+                ? 'bg-red-500 border-red-700 hover:bg-red-600' 
+                : 'bg-[#D4896A] border-[#A66B4F] hover:bg-[#E09A7A]'
+            }`}
+            style={{ fontFamily: "'Fredoka', sans-serif" }}
+            data-testid="start-study-btn"
           >
-            {/* Timer Mode Tabs */}
-            <div className="flex gap-2 mb-8 flex-wrap">
-              {Object.entries(TIMER_MODES).map(([key, mode]) => (
-                <button
-                  key={key}
-                  onClick={() => handleModeChange(key)}
-                  disabled={isRunning}
-                  className={`px-4 py-2 rounded-full font-semibold text-sm transition-colors ${
-                    timerMode === key
-                      ? 'bg-[var(--primary)] text-[var(--primary-foreground)]'
-                      : 'bg-[var(--surface-highlight)] text-[var(--text-muted)] hover:text-[var(--text-main)]'
-                  } ${isRunning ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  data-testid={`timer-mode-${key}`}
-                >
-                  {t(mode.label)}
-                </button>
-              ))}
-            </div>
+            {isRunning ? <Square className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+            {isRunning 
+              ? (language === 'tr' ? 'Çalışmayı Bitir' : 'Stop Studying')
+              : (language === 'tr' ? 'Ders Çalışmaya Başla' : 'Start Studying')
+            }
+          </motion.button>
 
-            {/* Timer Display */}
-            <div className="text-center mb-8">
-              <motion.div
-                key={timeLeft}
-                initial={{ scale: 1.02 }}
-                animate={{ scale: 1 }}
-                className="timer-display mb-4"
-                data-testid="timer-display"
-              >
-                {formatTime(timeLeft)}
-              </motion.div>
-              
-              <p className="text-[var(--text-muted)]">
-                {isRunning ? t('mascot_working') : t('mascot_start')}
-              </p>
+          {/* Credits Display */}
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="flex items-center gap-2 bg-[#F5E6D3] px-4 py-2 rounded-lg border-2 border-[#D4C4A8] shadow-md"
+          >
+            <div className="flex gap-1">
+              <span className="text-2xl">🪙</span>
             </div>
-
-            {/* Timer Controls */}
-            <div className="flex justify-center gap-4">
-              {!isRunning ? (
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={handleStartTimer}
-                  className="btn-primary flex items-center gap-2 text-lg"
-                  data-testid="start-timer-btn"
-                >
-                  <Play className="w-6 h-6" />
-                  {t('dashboard_start_focus')}
-                </motion.button>
-              ) : (
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={handleStopTimer}
-                  className="btn-primary bg-red-500 hover:bg-red-600 flex items-center gap-2"
-                  data-testid="stop-timer-btn"
-                >
-                  <Square className="w-5 h-5" />
-                  {t('dashboard_stop_focus')}
-                </motion.button>
-              )}
+            <span className="text-xl font-bold text-[#5D4E37]" style={{ fontFamily: "'Fredoka', sans-serif" }}>
+              {language === 'tr' ? 'KREDİ' : 'CREDIT'}: {user?.credits || 0}
+            </span>
+            <div className="flex gap-1">
+              <span className="text-2xl">🪙</span>
             </div>
           </motion.div>
 
-          {/* Right Column */}
-          <div className="space-y-6">
-            {/* Todos Card */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
-              className="cozy-card"
+          {/* Music & Theme Controls */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={togglePlayMusic}
+              className="p-2 bg-[#F5E6D3] rounded-lg border-2 border-[#D4C4A8] hover:bg-[#E8D9C6] transition-colors"
+              data-testid="music-toggle"
             >
-              <h2 className="text-xl font-bold text-[var(--text-main)] mb-4" style={{ fontFamily: "'Fredoka', sans-serif" }}>
-                {t('todos_title')}
-              </h2>
+              {isPlaying ? <Volume2 className="w-5 h-5 text-[#5D4E37]" /> : <VolumeX className="w-5 h-5 text-[#5D4E37]" />}
+            </button>
+          </div>
+        </div>
 
-              <form onSubmit={handleAddTodo} className="flex gap-2 mb-4">
-                <input
-                  type="text"
-                  value={newTodo}
-                  onChange={(e) => setNewTodo(e.target.value)}
-                  placeholder={t('todos_add')}
-                  className="cozy-input flex-1"
-                  data-testid="todo-input"
-                />
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  type="submit"
-                  className="p-3 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-xl"
-                  data-testid="add-todo-btn"
+        {/* Main Area */}
+        <div className="flex-1 flex">
+          {/* Left Side - Notifications & Timer */}
+          <div className="flex-1 p-6 flex flex-col gap-4">
+            
+            {/* Notification Banner */}
+            <AnimatePresence>
+              {notification.show && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="bg-[#F5E6D3]/95 rounded-xl border-4 border-[#D4C4A8] p-4 relative shadow-lg"
                 >
-                  <Plus className="w-5 h-5" />
-                </motion.button>
-              </form>
+                  <button 
+                    onClick={() => setNotification(prev => ({ ...prev, show: false }))}
+                    className="absolute top-2 right-2 text-[#8B6B4D] hover:text-[#5D4E37]"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                  <div className="flex items-center gap-3">
+                    <Sparkles className="w-6 h-6 text-[#D4896A]" />
+                    <div>
+                      <p className="font-bold text-[#5D4E37]" style={{ fontFamily: "'Fredoka', sans-serif" }}>
+                        {language === 'tr' ? 'Yeni Mevsim!' : 'New Season!'}
+                      </p>
+                      <p className="text-sm text-[#8B6B4D]">
+                        {language === 'tr' ? notification.message_tr : notification.message_en}
+                      </p>
+                    </div>
+                    <Gift className="w-6 h-6 text-[#D4896A]" />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-              <div className="space-y-2 max-h-64 overflow-y-auto">
-                <AnimatePresence>
-                  {todos.length === 0 ? (
-                    <p className="text-[var(--text-muted)] text-center py-4">{t('todos_empty')}</p>
-                  ) : (
-                    todos.map((todo) => (
-                      <motion.div
-                        key={todo.todo_id}
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, x: -100 }}
-                        className={`todo-item ${todo.completed ? 'completed' : ''}`}
-                        data-testid={`todo-item-${todo.todo_id}`}
-                      >
-                        <Checkbox
-                          checked={todo.completed}
-                          onCheckedChange={() => handleToggleTodo(todo.todo_id, todo.completed)}
-                        />
-                        <span className="todo-text flex-1 text-[var(--text-main)]">{todo.text}</span>
-                        <button
-                          onClick={() => handleDeleteTodo(todo.todo_id)}
-                          className="p-1 text-[var(--text-muted)] hover:text-red-500 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </motion.div>
-                    ))
-                  )}
-                </AnimatePresence>
+            {/* Timer Display */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-[#F5E6D3]/95 rounded-xl border-4 border-[#D4C4A8] p-6 shadow-lg"
+            >
+              {/* Timer Mode Tabs */}
+              <div className="flex gap-2 mb-4 justify-center">
+                {Object.entries(TIMER_MODES).map(([key, mode]) => (
+                  <button
+                    key={key}
+                    onClick={() => handleModeChange(key)}
+                    disabled={isRunning}
+                    className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all border-b-2 ${
+                      timerMode === key
+                        ? 'bg-[#D4896A] text-white border-[#A66B4F]'
+                        : 'bg-[#E8D9C6] text-[#5D4E37] border-[#D4C4A8] hover:bg-[#DFD0BC]'
+                    } ${isRunning ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    style={{ fontFamily: "'Fredoka', sans-serif" }}
+                    data-testid={`timer-mode-${key}`}
+                  >
+                    {language === 'tr' ? mode.label_tr : mode.label_en}
+                  </button>
+                ))}
+              </div>
+
+              {/* Timer */}
+              <div className="text-center">
+                <div 
+                  className="text-6xl md:text-7xl font-bold text-[#5D4E37] mb-4"
+                  style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                  data-testid="timer-display"
+                >
+                  {formatTime(timeLeft)}
+                </div>
+                <p className="text-[#8B6B4D]" style={{ fontFamily: "'Fredoka', sans-serif" }}>
+                  {isRunning 
+                    ? (language === 'tr' ? 'Çalışıyorsun! Harika gidiyorsun!' : "You're studying! Great job!")
+                    : (language === 'tr' ? 'Hadi çalışmaya başlayalım!' : "Let's start studying!")
+                  }
+                </p>
+              </div>
+
+              {/* Stats Row */}
+              <div className="flex justify-center gap-6 mt-6 pt-4 border-t-2 border-[#D4C4A8]">
+                <div className="flex items-center gap-2">
+                  <Flame className="w-5 h-5 text-orange-500" />
+                  <span className="font-bold text-[#5D4E37]">{user?.streak_days || 0}</span>
+                  <span className="text-sm text-[#8B6B4D]">{language === 'tr' ? 'Gün Serisi' : 'Day Streak'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">⭐</span>
+                  <span className="font-bold text-[#5D4E37]">Lv.{user?.level || 1}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">⏱️</span>
+                  <span className="font-bold text-[#5D4E37]">{user?.total_focus_minutes || 0}</span>
+                  <span className="text-sm text-[#8B6B4D]">{language === 'tr' ? 'dk' : 'min'}</span>
+                </div>
               </div>
             </motion.div>
 
-            {/* Music Card */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5 }}
-              className="cozy-card"
+            {/* Todo List Toggle */}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              onClick={() => setShowTodos(!showTodos)}
+              className="bg-[#F5E6D3]/95 rounded-xl border-4 border-[#D4C4A8] p-4 shadow-lg text-left hover:bg-[#EDE0CE]/95 transition-colors"
             >
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-[var(--text-main)]" style={{ fontFamily: "'Fredoka', sans-serif" }}>
-                  {t('music_title')}
-                </h2>
-                <button
-                  onClick={togglePlayMusic}
-                  className="p-2 rounded-full bg-[var(--surface-highlight)] text-[var(--primary)]"
-                  data-testid="music-toggle-btn"
-                >
-                  {isPlaying ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-                </button>
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-[#5D4E37]" style={{ fontFamily: "'Fredoka', sans-serif" }}>
+                  📝 {language === 'tr' ? 'Yapılacaklar' : 'To-Do List'} ({todos.filter(t => !t.completed).length})
+                </span>
+                <span className="text-[#8B6B4D]">{showTodos ? '▲' : '▼'}</span>
               </div>
+            </motion.button>
 
-              {currentTrack && (
-                <div className="mb-4 p-3 bg-[var(--surface-highlight)] rounded-xl">
-                  <p className="text-sm text-[var(--text-muted)]">{t('music_now_playing')}</p>
-                  <p className="font-semibold text-[var(--text-main)]">{currentTrack.name}</p>
-                  <p className="text-sm text-[var(--text-muted)]">{currentTrack.artist}</p>
-                </div>
+            {/* Todo List Expanded */}
+            <AnimatePresence>
+              {showTodos && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="bg-[#F5E6D3]/95 rounded-xl border-4 border-[#D4C4A8] p-4 shadow-lg"
+                >
+                  <form onSubmit={handleAddTodo} className="flex gap-2 mb-4">
+                    <input
+                      type="text"
+                      value={newTodo}
+                      onChange={(e) => setNewTodo(e.target.value)}
+                      placeholder={language === 'tr' ? 'Yeni görev ekle...' : 'Add new task...'}
+                      className="flex-1 px-3 py-2 bg-white/80 border-2 border-[#D4C4A8] rounded-lg text-[#5D4E37] placeholder-[#A89880]"
+                      data-testid="todo-input"
+                    />
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-[#D4896A] text-white rounded-lg border-b-2 border-[#A66B4F] hover:bg-[#E09A7A]"
+                      data-testid="add-todo-btn"
+                    >
+                      <Plus className="w-5 h-5" />
+                    </button>
+                  </form>
+
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {todos.length === 0 ? (
+                      <p className="text-center text-[#8B6B4D] py-4">
+                        {language === 'tr' ? 'Henüz görev yok' : 'No tasks yet'}
+                      </p>
+                    ) : (
+                      todos.map((todo) => (
+                        <div
+                          key={todo.todo_id}
+                          className={`flex items-center gap-3 p-2 rounded-lg bg-white/50 ${todo.completed ? 'opacity-60' : ''}`}
+                          data-testid={`todo-item-${todo.todo_id}`}
+                        >
+                          <Checkbox
+                            checked={todo.completed}
+                            onCheckedChange={() => handleToggleTodo(todo.todo_id, todo.completed)}
+                          />
+                          <span className={`flex-1 text-[#5D4E37] ${todo.completed ? 'line-through' : ''}`}>
+                            {todo.text}
+                          </span>
+                          <button
+                            onClick={() => handleDeleteTodo(todo.todo_id)}
+                            className="p-1 text-[#A89880] hover:text-red-500"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </motion.div>
               )}
+            </AnimatePresence>
+          </div>
 
-              <div className="space-y-1 max-h-40 overflow-y-auto">
-                {tracks.map((track) => (
+          {/* Right Sidebar */}
+          <div className="w-64 bg-[#8B6B4D]/90 border-l-4 border-[#5D4E37] p-4 flex flex-col gap-4">
+            
+            {/* Calendar Widget */}
+            <div className="bg-[#F5E6D3] rounded-xl border-4 border-[#D4C4A8] overflow-hidden">
+              <div className="bg-[#D4896A] px-4 py-2 text-center border-b-2 border-[#A66B4F]">
+                <p className="text-xs text-white/80">{monthNames[today.getMonth()].toUpperCase()} {today.getFullYear()}</p>
+              </div>
+              <div className="p-4 text-center">
+                <p className="text-4xl font-bold text-[#5D4E37]" style={{ fontFamily: "'Fredoka', sans-serif" }}>
+                  {today.getDate()}
+                </p>
+                <p className="text-sm text-[#8B6B4D]">{dayNames[today.getDay()]}</p>
+                <div className="mt-2 pt-2 border-t border-[#D4C4A8]">
+                  <p className="text-xs font-bold text-[#D4896A]" style={{ fontFamily: "'Fredoka', sans-serif" }}>
+                    {language === 'tr' ? THEMES[currentTheme].name_tr : THEMES[currentTheme].name_en}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Drinks Menu */}
+            <div className="bg-[#F5E6D3] rounded-xl border-4 border-[#D4C4A8] p-4 flex-1">
+              <h3 className="font-bold text-[#5D4E37] mb-3 text-center" style={{ fontFamily: "'Fredoka', sans-serif" }}>
+                ☕ {language === 'tr' ? 'İÇECEKLER' : 'DRINKS'}
+              </h3>
+              <div className="space-y-3">
+                {shopItems.map((item) => (
                   <div
-                    key={track.track_id}
-                    onClick={() => handleTrackSelect(track)}
-                    className={`music-track ${currentTrack?.track_id === track.track_id ? 'active' : ''} ${track.locked ? 'locked' : ''}`}
-                    data-testid={`music-track-${track.track_id}`}
+                    key={item.item_id}
+                    className={`flex items-center gap-2 p-2 rounded-lg transition-colors ${
+                      item.locked ? 'opacity-50' : 'hover:bg-[#E8D9C6] cursor-pointer'
+                    }`}
                   >
-                    <div className="w-8 h-8 rounded-lg bg-[var(--primary)] bg-opacity-20 flex items-center justify-center">
-                      {track.locked ? (
-                        <Lock className="w-4 h-4 text-[var(--text-muted)]" />
-                      ) : (
-                        <Volume2 className="w-4 h-4 text-[var(--primary)]" />
-                      )}
+                    <div className="w-10 h-10 rounded-lg overflow-hidden bg-white/50">
+                      <img 
+                        src={item.image_url} 
+                        alt={getName(item)}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-[var(--text-main)] truncate">{track.name}</p>
-                      <p className="text-xs text-[var(--text-muted)]">{track.category}</p>
+                      <p className="text-xs font-semibold text-[#5D4E37] truncate">{getName(item)}</p>
+                      {item.locked ? (
+                        <p className="text-xs text-[#A89880] flex items-center gap-1">
+                          <Lock className="w-3 h-3" /> Lv.{item.unlock_level}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-[#8B6B4D]">🪙 {item.price}</p>
+                      )}
                     </div>
-                    {track.locked && (
-                      <span className="text-xs text-[var(--text-muted)]">Lv.{track.unlock_level}</span>
-                    )}
                   </div>
                 ))}
               </div>
-            </motion.div>
+            </div>
+
+            {/* Theme Selector */}
+            <div className="bg-[#F5E6D3] rounded-xl border-4 border-[#D4C4A8] p-3">
+              <p className="text-xs font-bold text-[#5D4E37] mb-2 text-center" style={{ fontFamily: "'Fredoka', sans-serif" }}>
+                🎨 {language === 'tr' ? 'TEMA' : 'THEME'}
+              </p>
+              <div className="flex justify-center gap-2">
+                {Object.keys(THEMES).map((key) => (
+                  <button
+                    key={key}
+                    onClick={() => setCurrentTheme(key)}
+                    className={`w-8 h-8 rounded-lg border-2 transition-all ${
+                      currentTheme === key 
+                        ? 'border-[#D4896A] ring-2 ring-[#D4896A]' 
+                        : 'border-[#D4C4A8] hover:border-[#A89880]'
+                    }`}
+                    style={{
+                      backgroundImage: `url(${THEMES[key].bg})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center'
+                    }}
+                    title={language === 'tr' ? THEMES[key].name_tr : THEMES[key].name_en}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -539,29 +616,21 @@ export default function Dashboard() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="ad-overlay"
+            className="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
             data-testid="ad-modal"
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="ad-container"
+              className="bg-[#F5E6D3] rounded-xl border-4 border-[#D4C4A8] p-6 max-w-sm text-center shadow-2xl"
             >
-              <h3 className="text-2xl font-bold text-[var(--text-main)] mb-4" style={{ fontFamily: "'Fredoka', sans-serif" }}>
-                {t('session_complete')}
+              <h3 className="text-2xl font-bold text-[#5D4E37] mb-4" style={{ fontFamily: "'Fredoka', sans-serif" }}>
+                🎉 {language === 'tr' ? 'Seans Tamamlandı!' : 'Session Complete!'}
               </h3>
               
-              <motion.img
-                src={MASCOT_IMAGE}
-                alt="Poncik"
-                className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
-                animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-              />
-              
-              <p className="text-[var(--text-muted)] mb-6">
-                {t('dashboard_watch_ad')}
+              <p className="text-[#8B6B4D] mb-6">
+                {language === 'tr' ? 'Reklam izleyerek 2x kredi kazan!' : 'Watch ad to earn 2x credits!'}
               </p>
               
               <div className="flex flex-col gap-3">
@@ -570,18 +639,20 @@ export default function Dashboard() {
                   whileTap={{ scale: 0.98 }}
                   onClick={() => completeSession(true)}
                   disabled={adCountdown > 0}
-                  className={`btn-primary w-full ${adCountdown > 0 ? 'opacity-50' : ''}`}
+                  className={`px-6 py-3 bg-[#D4896A] text-white rounded-lg font-bold border-b-4 border-[#A66B4F] ${
+                    adCountdown > 0 ? 'opacity-50' : 'hover:bg-[#E09A7A]'
+                  }`}
                   data-testid="watch-ad-btn"
                 >
-                  {adCountdown > 0 ? `${adCountdown}s...` : '2x ' + t('dashboard_credits')}
+                  {adCountdown > 0 ? `${adCountdown}s...` : `🪙 2x ${language === 'tr' ? 'Kredi' : 'Credits'}`}
                 </motion.button>
                 
                 <button
                   onClick={() => completeSession(false)}
-                  className="btn-ghost w-full"
+                  className="px-6 py-2 text-[#8B6B4D] hover:text-[#5D4E37]"
                   data-testid="skip-ad-btn"
                 >
-                  {t('cancel')}
+                  {language === 'tr' ? 'Geç' : 'Skip'}
                 </button>
               </div>
             </motion.div>
