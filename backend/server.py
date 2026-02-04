@@ -151,6 +151,12 @@ async def get_current_user(request: Request) -> User:
     if not user_doc:
         raise HTTPException(status_code=404, detail="User not found")
     
+    # Convert datetime to string if needed
+    if user_doc.get("created_at") and not isinstance(user_doc["created_at"], str):
+        user_doc["created_at"] = user_doc["created_at"].isoformat()
+    if user_doc.get("last_study_date") and not isinstance(user_doc["last_study_date"], str):
+        user_doc["last_study_date"] = user_doc["last_study_date"].isoformat()
+    
     return User(**user_doc)
 
 # ==================== AUTH ENDPOINTS ====================
