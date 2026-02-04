@@ -23,15 +23,18 @@ Bu bir cozy app. Kullanıcı app'i açtığında Poncik (temaya uygun maskot) "M
 - [x] Rozet sistemi
 - [x] TR/EN dil desteği
 - [x] Açık/Koyu tema
+- [x] Evcil hayvan koleksiyonu (YENİ)
 
 ## Architecture
 - **Frontend**: React + Tailwind CSS + Shadcn/UI + Framer Motion
 - **Backend**: FastAPI + MongoDB
 - **Auth**: Emergent Google OAuth
 - **Styling**: Cozy cafe theme (Fredoka + Nunito fonts)
+- **Assets**: tiny-cafe GitHub repo görselleri
 
-## What's Been Implemented (2026-02-04)
-### Backend
+## What's Been Implemented
+
+### 2026-02-04 - Initial MVP
 - User authentication with session management
 - Todo CRUD endpoints
 - Focus session tracking with credit calculation
@@ -41,16 +44,12 @@ Bu bir cozy app. Kullanıcı app'i açtığında Poncik (temaya uygun maskot) "M
 - Badges and earned badges
 - User stats and settings
 
-### Frontend
-- Landing page with Poncik mascot
-- Dashboard with Bento grid layout (Timer, Todos, Music)
-- Shop page with drinks/treats tabs
-- Community page with leaderboard and friends
-- Profile page with stats and badges
-- Settings page with language/theme toggles
-- Bottom navigation
-- Light/Dark theme support
-- TR/EN language support
+### 2026-02-04 - Visual Update (tiny-cafe integration)
+- Poncik maskot - sevimli ördek karakteri
+- Shop içecekleri - Latte, Cappuccino, Mocha, Matcha, Hot Chocolate, Chai Latte, Espresso, Caramel Latte, Strawberry Smoothie, Lemonade
+- Shop tatlıları - Croissant, Donut, Cupcake, Macaron, Chocolate Cake, Cheesecake, Ice Cream, Profiterole, Crème Brûlée
+- Yeni Pets sayfası - 12 farklı evcil hayvan (Poncik, Bunny, Cat, Puppy, Hamster, Kitten, Fox, Owl, Panda, Penguin, Raccoon, Squirrel)
+- Görsel varlıklar /assets/drinks/ ve /assets/desserts/ klasörlerinde
 
 ## Prioritized Backlog
 
@@ -59,7 +58,8 @@ Bu bir cozy app. Kullanıcı app'i açtığında Poncik (temaya uygun maskot) "M
 - [x] Timer functionality
 - [x] Todo management
 - [x] Credit system
-- [x] Basic shop
+- [x] Basic shop with real images
+- [x] Pets collection page
 
 ### P1 (Future)
 - [ ] Push notifications for break reminders
@@ -67,6 +67,7 @@ Bu bir cozy app. Kullanıcı app'i açtığında Poncik (temaya uygun maskot) "M
 - [ ] Real ad integration (Google AdMob)
 - [ ] Profile picture upload
 - [ ] Session history with calendar view
+- [ ] Active pet selection (display on dashboard)
 
 ### P2 (Nice to have)
 - [ ] Seasonal themes (Spring, Summer, Fall, Winter)
@@ -76,8 +77,8 @@ Bu bir cozy app. Kullanıcı app'i açtığında Poncik (temaya uygun maskot) "M
 - [ ] Mobile app (React Native)
 
 ## Next Tasks
-1. Add real-time notifications for session completion
-2. Implement sound effects for interactions
-3. Add more shop items with actual images
-4. Calendar view for focus history
+1. Active pet selection system - Dashboard'da seçilen pet'i göster
+2. Push notifications ekle (timer bittiğinde)
+3. Ses efektleri ekle
+4. Takvim görünümü ile çalışma geçmişi
 5. Achievement sharing to social media
