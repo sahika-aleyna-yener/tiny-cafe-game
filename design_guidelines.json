@@ -1,0 +1,149 @@
+{
+  "identity": {
+    "name": "PoncikFocus",
+    "tone": "Warm, Encouraging, Safe, Cozy, Gamified",
+    "aesthetic": "Cozy Cafe & Lofi Study Room",
+    "description": "A productivity app that feels like a warm hug. It gamifies studying without the stress, using a cute mascot 'Poncik' and a cafe-themed reward system."
+  },
+  "typography": {
+    "headings": {
+      "family": "Fredoka, Quicksand, sans-serif",
+      "weights": ["600", "700"],
+      "usage": "Use for all section titles, greetings, and major stats. It must feel rounded and friendly."
+    },
+    "body": {
+      "family": "Nunito, Varela Round, sans-serif",
+      "weights": ["400", "600"],
+      "usage": "Use for all general text, tasks, and descriptions. High readability but maintaining the soft curve."
+    },
+    "monospace": {
+      "family": "JetBrains Mono, monospace",
+      "usage": "Only for timer digits if needed for alignment."
+    }
+  },
+  "colors": {
+    "palette": {
+      "light": {
+        "background": "#FFF8E7",
+        "surface": "#FFFFFF",
+        "surface_highlight": "#FFFCF5",
+        "primary": "#8D6E63",
+        "primary_foreground": "#FFFFFF",
+        "secondary": "#A5D6A7",
+        "accent": "#F48FB1",
+        "text_main": "#4E342E",
+        "text_muted": "#8D6E63",
+        "border": "#E6D6C6"
+      },
+      "dark": {
+        "background": "#2C2420",
+        "surface": "#3E322C",
+        "surface_highlight": "#4E4038",
+        "primary": "#D7CCC8",
+        "primary_foreground": "#2C2420",
+        "secondary": "#81C784",
+        "accent": "#F06292",
+        "text_main": "#EFEBE9",
+        "text_muted": "#BCAAA4",
+        "border": "#5D4037"
+      }
+    },
+    "gradients": {
+      "warm_glow": "linear-gradient(135deg, #FFF8E7 0%, #FFE0B2 100%)",
+      "soft_night": "linear-gradient(135deg, #2C2420 0%, #1A1B26 100%)"
+    }
+  },
+  "visual_enhancers": {
+    "radius": {
+      "default": "rounded-2xl",
+      "large": "rounded-3xl",
+      "full": "rounded-full"
+    },
+    "shadows": {
+      "soft": "0 10px 30px -10px rgba(141, 110, 99, 0.2)",
+      "card": "0 4px 6px -1px rgba(141, 110, 99, 0.1), 0 2px 4px -1px rgba(141, 110, 99, 0.06)",
+      "inner": "inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)"
+    },
+    "texture": {
+      "paper_overlay": "url('https://images.pexels.com/photos/5993559/pexels-photo-5993559.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940')",
+      "usage": "Overlay on the main background with opacity-20 and mix-blend-mode: multiply to give a tactile paper feel."
+    }
+  },
+  "layout_strategy": {
+    "grid_system": "Bento Grid (Rounded)",
+    "container": "max-w-md mx-auto md:max-w-4xl lg:max-w-6xl px-4 md:px-8",
+    "spacing": "Relaxed. Use gap-6 or gap-8. Don't crowd the elements."
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8 py-3 font-bold shadow-soft transition-transform active:scale-95",
+      "secondary": "bg-secondary/20 text-secondary-foreground hover:bg-secondary/30 rounded-full px-6 py-2 font-semibold",
+      "ghost": "hover:bg-accent/10 text-accent rounded-full px-4 py-2"
+    },
+    "cards": {
+      "style": "bg-surface border border-border/50 rounded-3xl shadow-card overflow-hidden relative",
+      "interactive": "hover:shadow-soft hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+    },
+    "inputs": {
+      "style": "bg-surface_highlight border-2 border-border/50 focus:border-primary rounded-xl px-4 py-3 outline-none transition-colors text-text_main placeholder:text-text_muted"
+    }
+  },
+  "motion": {
+    "animation_library": "framer-motion",
+    "transitions": {
+      "default": { "type": "spring", "stiffness": 300, "damping": 30 },
+      "bouncy": { "type": "spring", "stiffness": 400, "damping": 15 },
+      "slow_fade": { "duration": 0.5, "ease": "easeInOut" }
+    },
+    "micro_interactions": {
+      "hover": "scale: 1.02",
+      "tap": "scale: 0.95",
+      "float": "y: [0, -10, 0] (loop)"
+    }
+  },
+  "assets": {
+    "mascot": {
+      "poncik_main": "https://images.unsplash.com/photo-1766465182486-1d558f382494?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NDh8MHwxfHNlYXJjaHwxfHxjdXRlJTIwZmx1ZmZ5JTIwdGVkZHklMjBiZWFyJTIwdG95fGVufDB8fHx8MTc3MDE5NzUyMnww&ixlib=rb-4.1.0&q=85",
+      "poncik_happy": "https://images.unsplash.com/photo-1765913186506-a4f1ca060ced?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NDh8MHwxfHNlYXJjaHwzfHxjdXRlJTIwZmx1ZmZ5JTIwdGVkZHklMjBiZWFyJTIwdG95fGVufDB8fHx8MTc3MDE5NzUyMnww&ixlib=rb-4.1.0&q=85",
+      "usage": "Display Poncik on the Dashboard greeting, Success Modals, and Empty States. He is the user's study buddy."
+    },
+    "shop": {
+      "coffee": "https://images.unsplash.com/photo-1764964048064-a48368fe7c3e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODF8MHwxfHNlYXJjaHwxfHxjb3p5JTIwY29mZmVlJTIwc2hvcCUyMGludGVyaW9yJTIwd2FybSUyMGxpZ2h0aW5nfGVufDB8fHx8MTc3MDE5NzUyMnww&ixlib=rb-4.1.0&q=85",
+      "donut": "https://images.unsplash.com/photo-1628583119100-abc1b2198062?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njd8MHwxfHNlYXJjaHw0fHxjb2ZmZWUlMjBwYXN0cnklMjBkb251dCUyMGNhcnRvb24lMjBpY29ufGVufDB8fHx8MTc3MDE5NzUxMHww&ixlib=rb-4.1.0&q=85",
+      "latte_art": "https://images.pexels.com/photos/34287068/pexels-photo-34287068.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+    }
+  },
+  "instructions_to_main_agent": [
+    "1. THEME TOGGLE: Implement a theme toggle but DEFAULT to the 'Light/Cozy' theme. The dark theme should be warm, not pitch black.",
+    "2. MASCOT: 'Poncik' must greet the user. Create a component <PoncikAvatar /> that handles his different states (idle, happy, studying).",
+    "3. GAMIFICATION: The 'Shop' is for spending 'Focus Credits'. These are VIRTUAL items (coffee, donut) that decorate the user's virtual desk or profile.",
+    "4. MUSIC: Implement a simple audio player with a 'Lofi' playlist. It should persist across pages if possible (or be available on the Dashboard).",
+    "5. COMPONENTS: Use Shadcn UI for complex logic (Dialog, Form, Toast) but STRIP the default styling. Apply the 'visual_enhancers' rules (Rounded-3xl, Warm Colors).",
+    "6. FONTS: You must load 'Fredoka' and 'Nunito' from Google Fonts in the index.html or CSS.",
+    "7. LAYOUT: The Dashboard should be a Bento Grid. Left col: Timer (Hero). Right col: To-do list (Tall) + Music Player (Small).",
+    "8. LANGUAGE: Provide a toggle for EN/TR (English/Turkish). Hardcode the strings for now or use a simple dictionary object.",
+    "9. ANIMATION: Use framer-motion for page transitions and button clicks. The app should feel 'alive' and 'bouncy'."
+  ],
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "You tend to converge toward generic, 'on distribution' outputs. In frontend design, this creates what users call the 'AI slop' aesthetic. Avoid this: make creative, distinctive frontends that surprise and delight.",
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients",
+    "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
+    "Create depth through layered design elements with z-index hierarchy",
+    "Use glass-morphism effects with backdrop filters (12-24px blur)",
+    "You MUST NOT apply universal transition. Eg: transition: all. This results in breaking transforms. Always add transitions for specific interactive elements like button, input excluding transforms",
+    "You MUST NOT center align the app container, ie do not add .App { text-align: center; } in the css file. This disrupts the human natural reading flow of text",
+    "Always use modern button styles like pill-shaped, or sharp button with interaction animations & color relevant to the app style",
+    "NEVER: use AI assistant Emoji characters like 🤖🧠💭💡🔮🎯📚🎭🎬🎪🎉🎊🎁🎀🎂🍰🎈🎨🎰💰💵💳🏦💎🪙💸🤑📊📈📉💹🔢🏆🥇 etc for icons.",
+    "Every interaction needs micro-animations - hover states, transitions, parallax effects, and entrance animations. Static = dead.",
+    "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
+    "Subtle grain textures, noise overlays, custom cursors, selection states, and loading animations: separates good from extraordinary.",
+    "Main agent relies on these image URLs. Missing categories (especially sponsor logos) = main agent will use placeholder text which is FORBIDDEN",
+    "Prioritize using pre-existing components from src/components/ui when applicable",
+    "Create new components that match the style and conventions of existing components when needed",
+    "Examine existing components to understand the project's component patterns before creating new ones",
+    "Components MUST use named exports (export const ComponentName = ...)",
+    "Pages MUST use default exports (export default function PageName() {...})",
+    "Use 'sonner' for toasts",
+    "Sonner component are located in /app/frontend/src/components/ui/sonner.tsx"
+  ]
+}
