@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
-import { User, Award, Clock, Coffee, Flame, Star, ShoppingBag, Users, LogOut } from 'lucide-react';
+import { User, Award, Clock, Coffee, Flame, Star, ShoppingBag, Users, LogOut, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { Progress } from '../components/ui/progress';
