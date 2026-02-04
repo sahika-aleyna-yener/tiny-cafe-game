@@ -321,6 +321,8 @@ def main():
         tester.test_shop_items,
         tester.test_music_tracks,
         tester.test_badges,
+        tester.test_daily_quests,
+        tester.test_achievements,
         tester.test_todos_crud,
         tester.test_focus_session_flow,
         tester.test_user_stats,
