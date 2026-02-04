@@ -1,10 +1,13 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
-import { Play, Square, Plus, Trash2, Coffee, Flame, Volume2, VolumeX, Lock, Calendar, Gift, Sparkles, X, Check } from 'lucide-react';
+import { Play, Square, Plus, Trash2, Coffee, Flame, Volume2, VolumeX, Lock, Calendar, Gift, Sparkles, X, Check, Music, Target, Award, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { Checkbox } from '../components/ui/checkbox';
+import { Progress } from '../components/ui/progress';
+import CafeCharacters from '../components/CafeCharacters';
+import MusicPlayer from '../components/MusicPlayer';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -24,6 +27,15 @@ const TIMER_MODES = {
   longBreak: { duration: 15, label_tr: 'Uzun Mola', label_en: 'Long Break' },
 };
 
+// Motivational messages
+const MOTIVATION_MESSAGES = [
+  { tr: 'Harika gidiyorsun! 💪', en: 'You\'re doing great! 💪' },
+  { tr: 'Odaklan, başarı yakın! ✨', en: 'Stay focused, success is near! ✨' },
+  { tr: 'Her dakika seni güçlendiriyor! 📚', en: 'Every minute makes you stronger! 📚' },
+  { tr: 'Sen yapabilirsin! 🎯', en: 'You can do it! 🎯' },
+  { tr: 'Kafede en çalışkan sensin! ☕', en: 'You\'re the hardest worker in the cafe! ☕' },
+];
+
 export default function Dashboard() {
   const { t, language } = useLanguage();
   const { user, refreshUser } = useAuth();
@@ -39,6 +51,7 @@ export default function Dashboard() {
   const [showAdModal, setShowAdModal] = useState(false);
   const [adCountdown, setAdCountdown] = useState(5);
   const startTimeRef = useRef(null);
+  const [motivationMessage, setMotivationMessage] = useState(null);
   
   // Todos state
   const [todos, setTodos] = useState([]);
@@ -46,22 +59,28 @@ export default function Dashboard() {
   const [showTodos, setShowTodos] = useState(false);
   
   // Music state
-  const [tracks, setTracks] = useState([]);
-  const [currentTrack, setCurrentTrack] = useState(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const audioRef = useRef(null);
+  const [showMusicPlayer, setShowMusicPlayer] = useState(false);
+  const [isPlayingMusic, setIsPlayingMusic] = useState(false);
   
   // Shop items for sidebar
   const [shopItems, setShopItems] = useState([]);
   
+  // Daily quests
+  const [dailyQuests, setDailyQuests] = useState([]);
+  const [showQuests, setShowQuests] = useState(false);
+  
   // Notification state
-  const [notification, setNotification] = useState({ show: true, message_tr: 'Yeni Mevsim! Bahar Şenliği Başladı!', message_en: 'New Season! Spring Festival Started!' });
+  const [notification, setNotification] = useState({ 
+    show: true, 
+    message_tr: 'Yeni Mevsim! Bahar Şenliği Başladı! 🌸', 
+    message_en: 'New Season! Spring Festival Started! 🌸' 
+  });
 
   // Fetch initial data
   useEffect(() => {
     fetchTodos();
-    fetchTracks();
     fetchShopItems();
+    fetchDailyQuests();
   }, []);
 
   // Timer logic
@@ -76,6 +95,20 @@ export default function Dashboard() {
     }
     return () => clearInterval(interval);
   }, [isRunning, timeLeft]);
+
+  // Motivation messages every 5 minutes while studying
+  useEffect(() => {
+    if (!isRunning) return;
+    
+    const showMotivation = () => {
+      const msg = MOTIVATION_MESSAGES[Math.floor(Math.random() * MOTIVATION_MESSAGES.length)];
+      setMotivationMessage(language === 'tr' ? msg.tr : msg.en);
+      setTimeout(() => setMotivationMessage(null), 4000);
+    };
+
+    const interval = setInterval(showMotivation, 5 * 60 * 1000); // Every 5 minutes
+    return () => clearInterval(interval);
+  }, [isRunning, language]);
 
   // Ad countdown
   useEffect(() => {
@@ -97,31 +130,25 @@ export default function Dashboard() {
     }
   };
 
-  const fetchTracks = async () => {
-    try {
-      const res = await fetch(`${API}/music/tracks`, { credentials: 'include' });
-      if (res.ok) {
-        const data = await res.json();
-        setTracks(data);
-        const unlockedTrack = data.find(t => !t.locked);
-        if (unlockedTrack) setCurrentTrack(unlockedTrack);
-      }
-    } catch (err) {
-      console.error('Failed to fetch tracks:', err);
-    }
-  };
-
   const fetchShopItems = async () => {
     try {
       const res = await fetch(`${API}/shop/items`, { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
-        // Get 4 random drink items for sidebar
         const drinks = data.filter(i => i.category === 'drinks').slice(0, 4);
         setShopItems(drinks);
       }
     } catch (err) {
       console.error('Failed to fetch shop items:', err);
+    }
+  };
+
+  const fetchDailyQuests = async () => {
+    try {
+      const res = await fetch(`${API}/quests/daily`, { credentials: 'include' });
+      if (res.ok) setDailyQuests(await res.json());
+    } catch (err) {
+      console.error('Failed to fetch quests:', err);
     }
   };
 
@@ -144,11 +171,7 @@ export default function Dashboard() {
         setSessionId(data.session_id);
         setIsRunning(true);
         startTimeRef.current = Date.now();
-        
-        if (currentTrack && !currentTrack.locked) {
-          audioRef.current?.play();
-          setIsPlaying(true);
-        }
+        toast.success(language === 'tr' ? 'Çalışma başladı! Başarılar! 🎯' : 'Study started! Good luck! 🎯');
       }
     } catch (err) {
       console.error('Failed to start session:', err);
@@ -158,8 +181,6 @@ export default function Dashboard() {
 
   const handleStopTimer = () => {
     setIsRunning(false);
-    audioRef.current?.pause();
-    setIsPlaying(false);
     
     if (sessionId && startTimeRef.current) {
       const elapsedSeconds = Math.floor((Date.now() - startTimeRef.current) / 1000);
@@ -174,10 +195,9 @@ export default function Dashboard() {
 
   const handleTimerComplete = async () => {
     setIsRunning(false);
-    audioRef.current?.pause();
-    setIsPlaying(false);
     setShowAdModal(true);
     setAdCountdown(5);
+    toast.success(language === 'tr' ? '🎉 Seans tamamlandı! Harika iş!' : '🎉 Session complete! Great job!');
   };
 
   const completeSession = async (doubleCredits = false) => {
@@ -197,6 +217,7 @@ export default function Dashboard() {
         const data = await res.json();
         toast.success(`+${data.credits_earned} ${language === 'tr' ? 'Kredi' : 'Credits'}! +${data.xp_earned} XP`);
         await refreshUser();
+        await fetchDailyQuests(); // Update quest progress
       }
     } catch (err) {
       console.error('Failed to end session:', err);
@@ -246,6 +267,11 @@ export default function Dashboard() {
         body: JSON.stringify({ completed: !completed }),
       });
       setTodos(prev => prev.map(t => t.todo_id === todoId ? { ...t, completed: !completed } : t));
+      
+      // Refresh quests if completing a todo
+      if (!completed) {
+        await fetchDailyQuests();
+      }
     } catch (err) {
       console.error('Failed to toggle todo:', err);
     }
@@ -260,14 +286,22 @@ export default function Dashboard() {
     }
   };
 
-  const togglePlayMusic = () => {
-    if (!currentTrack || currentTrack.locked) return;
-    if (isPlaying) {
-      audioRef.current?.pause();
-    } else {
-      audioRef.current?.play();
+  const claimQuest = async (questId) => {
+    try {
+      const res = await fetch(`${API}/quests/claim/${questId}`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        toast.success(`${language === 'tr' ? 'Görev tamamlandı!' : 'Quest completed!'} +${data.credits_earned} 🪙`);
+        await refreshUser();
+        await fetchDailyQuests();
+      }
+    } catch (err) {
+      console.error('Failed to claim quest:', err);
     }
-    setIsPlaying(!isPlaying);
   };
 
   const today = new Date();
@@ -279,29 +313,29 @@ export default function Dashboard() {
     : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
   const getName = (item) => language === 'tr' ? item.name_tr : item.name_en;
+  const getQuestTitle = (quest) => language === 'tr' ? quest.title_tr : quest.title_en;
+
+  const completedQuestsCount = dailyQuests.filter(q => q.completed || q.progress >= q.target).length;
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Audio element */}
-      <audio ref={audioRef} src={currentTrack?.url} loop />
-
       {/* Background Image */}
       <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ 
-          backgroundImage: `url(${THEMES[currentTheme].bg})`,
-          imageRendering: 'pixelated'
-        }}
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-1000"
+        style={{ backgroundImage: `url(${THEMES[currentTheme].bg})` }}
       />
       
+      {/* Animated Cafe Characters */}
+      <CafeCharacters language={language} isStudying={isRunning} />
+      
       {/* Overlay for better readability */}
-      <div className="absolute inset-0 bg-black/20" />
+      <div className="absolute inset-0 bg-black/10" />
 
       {/* Main Content */}
-      <div className="relative z-10 min-h-screen flex flex-col">
+      <div className="relative z-10 min-h-screen flex flex-col pb-20">
         
-        {/* Top Bar - Pixel Art Style */}
-        <div className="bg-[#8B6B4D]/95 border-b-4 border-[#5D4E37] px-4 py-3 flex items-center justify-between">
+        {/* Top Bar */}
+        <div className="bg-[#8B6B4D]/95 border-b-4 border-[#5D4E37] px-4 py-3 flex items-center justify-between backdrop-blur-sm">
           {/* Start Study Button */}
           <motion.button
             whileHover={{ scale: 1.02 }}
@@ -328,33 +362,49 @@ export default function Dashboard() {
             animate={{ scale: 1 }}
             className="flex items-center gap-2 bg-[#F5E6D3] px-4 py-2 rounded-lg border-2 border-[#D4C4A8] shadow-md"
           >
-            <div className="flex gap-1">
-              <span className="text-2xl">🪙</span>
-            </div>
+            <span className="text-2xl">🪙</span>
             <span className="text-xl font-bold text-[#5D4E37]" style={{ fontFamily: "'Fredoka', sans-serif" }}>
               {language === 'tr' ? 'KREDİ' : 'CREDIT'}: {user?.credits || 0}
             </span>
-            <div className="flex gap-1">
-              <span className="text-2xl">🪙</span>
-            </div>
+            <span className="text-2xl">🪙</span>
           </motion.div>
 
-          {/* Music & Theme Controls */}
+          {/* Music Control */}
           <div className="flex items-center gap-3">
-            <button
-              onClick={togglePlayMusic}
-              className="p-2 bg-[#F5E6D3] rounded-lg border-2 border-[#D4C4A8] hover:bg-[#E8D9C6] transition-colors"
-              data-testid="music-toggle"
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setShowMusicPlayer(true)}
+              className="p-3 bg-[#F5E6D3] rounded-lg border-2 border-[#D4C4A8] hover:bg-[#E8D9C6] transition-colors flex items-center gap-2"
+              data-testid="music-btn"
             >
-              {isPlaying ? <Volume2 className="w-5 h-5 text-[#5D4E37]" /> : <VolumeX className="w-5 h-5 text-[#5D4E37]" />}
-            </button>
+              <Music className="w-5 h-5 text-[#5D4E37]" />
+              <span className="text-sm font-semibold text-[#5D4E37] hidden md:block">
+                {language === 'tr' ? 'Müzik' : 'Music'}
+              </span>
+            </motion.button>
           </div>
         </div>
 
         {/* Main Area */}
         <div className="flex-1 flex">
-          {/* Left Side - Notifications & Timer */}
-          <div className="flex-1 p-6 flex flex-col gap-4">
+          {/* Left Side - Content */}
+          <div className="flex-1 p-6 flex flex-col gap-4 overflow-y-auto">
+            
+            {/* Motivation Message */}
+            <AnimatePresence>
+              {motivationMessage && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                  className="absolute top-20 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#D4896A] to-[#E09A7A] text-white px-6 py-3 rounded-xl shadow-xl z-20"
+                  style={{ fontFamily: "'Fredoka', sans-serif" }}
+                >
+                  {motivationMessage}
+                </motion.div>
+              )}
+            </AnimatePresence>
             
             {/* Notification Banner */}
             <AnimatePresence>
@@ -363,7 +413,7 @@ export default function Dashboard() {
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
-                  className="bg-[#F5E6D3]/95 rounded-xl border-4 border-[#D4C4A8] p-4 relative shadow-lg"
+                  className="bg-[#F5E6D3]/95 rounded-xl border-4 border-[#D4C4A8] p-4 relative shadow-lg backdrop-blur-sm"
                 >
                   <button 
                     onClick={() => setNotification(prev => ({ ...prev, show: false }))}
@@ -373,14 +423,9 @@ export default function Dashboard() {
                   </button>
                   <div className="flex items-center gap-3">
                     <Sparkles className="w-6 h-6 text-[#D4896A]" />
-                    <div>
-                      <p className="font-bold text-[#5D4E37]" style={{ fontFamily: "'Fredoka', sans-serif" }}>
-                        {language === 'tr' ? 'Yeni Mevsim!' : 'New Season!'}
-                      </p>
-                      <p className="text-sm text-[#8B6B4D]">
-                        {language === 'tr' ? notification.message_tr : notification.message_en}
-                      </p>
-                    </div>
+                    <p className="font-bold text-[#5D4E37]" style={{ fontFamily: "'Fredoka', sans-serif" }}>
+                      {language === 'tr' ? notification.message_tr : notification.message_en}
+                    </p>
                     <Gift className="w-6 h-6 text-[#D4896A]" />
                   </div>
                 </motion.div>
@@ -391,10 +436,10 @@ export default function Dashboard() {
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-[#F5E6D3]/95 rounded-xl border-4 border-[#D4C4A8] p-6 shadow-lg"
+              className="bg-[#F5E6D3]/95 rounded-xl border-4 border-[#D4C4A8] p-6 shadow-lg backdrop-blur-sm"
             >
               {/* Timer Mode Tabs */}
-              <div className="flex gap-2 mb-4 justify-center">
+              <div className="flex gap-2 mb-4 justify-center flex-wrap">
                 {Object.entries(TIMER_MODES).map(([key, mode]) => (
                   <button
                     key={key}
@@ -415,27 +460,29 @@ export default function Dashboard() {
 
               {/* Timer */}
               <div className="text-center">
-                <div 
+                <motion.div 
                   className="text-6xl md:text-7xl font-bold text-[#5D4E37] mb-4"
                   style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                  animate={isRunning ? { scale: [1, 1.02, 1] } : {}}
+                  transition={{ repeat: Infinity, duration: 2 }}
                   data-testid="timer-display"
                 >
                   {formatTime(timeLeft)}
-                </div>
+                </motion.div>
                 <p className="text-[#8B6B4D]" style={{ fontFamily: "'Fredoka', sans-serif" }}>
                   {isRunning 
-                    ? (language === 'tr' ? 'Çalışıyorsun! Harika gidiyorsun!' : "You're studying! Great job!")
-                    : (language === 'tr' ? 'Hadi çalışmaya başlayalım!' : "Let's start studying!")
+                    ? (language === 'tr' ? 'Çalışıyorsun! Harika gidiyorsun! 🔥' : "You're studying! Great job! 🔥")
+                    : (language === 'tr' ? 'Hadi çalışmaya başlayalım! ☕' : "Let's start studying! ☕")
                   }
                 </p>
               </div>
 
               {/* Stats Row */}
-              <div className="flex justify-center gap-6 mt-6 pt-4 border-t-2 border-[#D4C4A8]">
+              <div className="flex justify-center gap-6 mt-6 pt-4 border-t-2 border-[#D4C4A8] flex-wrap">
                 <div className="flex items-center gap-2">
                   <Flame className="w-5 h-5 text-orange-500" />
                   <span className="font-bold text-[#5D4E37]">{user?.streak_days || 0}</span>
-                  <span className="text-sm text-[#8B6B4D]">{language === 'tr' ? 'Gün Serisi' : 'Day Streak'}</span>
+                  <span className="text-sm text-[#8B6B4D]">{language === 'tr' ? 'Gün' : 'Days'}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-lg">⭐</span>
@@ -449,11 +496,88 @@ export default function Dashboard() {
               </div>
             </motion.div>
 
+            {/* Daily Quests */}
+            <motion.button
+              whileHover={{ scale: 1.01 }}
+              onClick={() => setShowQuests(!showQuests)}
+              className="bg-gradient-to-r from-[#D4896A]/95 to-[#E09A7A]/95 rounded-xl border-4 border-[#A66B4F] p-4 shadow-lg text-left hover:from-[#E09A7A]/95 hover:to-[#F0AB8B]/95 transition-all backdrop-blur-sm"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Target className="w-6 h-6 text-white" />
+                  <span className="font-bold text-white text-lg" style={{ fontFamily: "'Fredoka', sans-serif" }}>
+                    {language === 'tr' ? 'Günlük Görevler' : 'Daily Quests'}
+                  </span>
+                  <span className="bg-white/20 px-2 py-1 rounded-full text-sm text-white">
+                    {completedQuestsCount}/{dailyQuests.length}
+                  </span>
+                </div>
+                <ChevronRight className={`w-5 h-5 text-white transition-transform ${showQuests ? 'rotate-90' : ''}`} />
+              </div>
+            </motion.button>
+
+            {/* Quests Expanded */}
+            <AnimatePresence>
+              {showQuests && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="bg-[#F5E6D3]/95 rounded-xl border-4 border-[#D4C4A8] p-4 shadow-lg space-y-3 backdrop-blur-sm"
+                >
+                  {dailyQuests.map((quest) => {
+                    const isComplete = quest.progress >= quest.target;
+                    const isClaimed = quest.completed;
+                    
+                    return (
+                      <div
+                        key={quest.quest_id}
+                        className={`p-3 rounded-xl border-2 ${
+                          isClaimed ? 'bg-green-100 border-green-300' : 
+                          isComplete ? 'bg-yellow-50 border-yellow-300' : 
+                          'bg-white/50 border-[#D4C4A8]'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-semibold text-[#5D4E37]">{getQuestTitle(quest)}</span>
+                          <span className="text-sm text-[#8B6B4D]">
+                            🪙 {quest.reward_credits} | ✨ {quest.reward_xp} XP
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Progress 
+                            value={(quest.progress / quest.target) * 100} 
+                            className="flex-1 h-2"
+                          />
+                          <span className="text-sm font-semibold text-[#5D4E37] min-w-[60px] text-right">
+                            {quest.progress}/{quest.target}
+                          </span>
+                          {isComplete && !isClaimed && (
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => claimQuest(quest.quest_id)}
+                              className="px-3 py-1 bg-[#D4896A] text-white rounded-lg text-sm font-bold"
+                            >
+                              {language === 'tr' ? 'Al' : 'Claim'}
+                            </motion.button>
+                          )}
+                          {isClaimed && (
+                            <Check className="w-5 h-5 text-green-500" />
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Todo List Toggle */}
             <motion.button
-              whileHover={{ scale: 1.02 }}
+              whileHover={{ scale: 1.01 }}
               onClick={() => setShowTodos(!showTodos)}
-              className="bg-[#F5E6D3]/95 rounded-xl border-4 border-[#D4C4A8] p-4 shadow-lg text-left hover:bg-[#EDE0CE]/95 transition-colors"
+              className="bg-[#F5E6D3]/95 rounded-xl border-4 border-[#D4C4A8] p-4 shadow-lg text-left hover:bg-[#EDE0CE]/95 transition-colors backdrop-blur-sm"
             >
               <div className="flex items-center justify-between">
                 <span className="font-bold text-[#5D4E37]" style={{ fontFamily: "'Fredoka', sans-serif" }}>
@@ -470,7 +594,7 @@ export default function Dashboard() {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="bg-[#F5E6D3]/95 rounded-xl border-4 border-[#D4C4A8] p-4 shadow-lg"
+                  className="bg-[#F5E6D3]/95 rounded-xl border-4 border-[#D4C4A8] p-4 shadow-lg backdrop-blur-sm"
                 >
                   <form onSubmit={handleAddTodo} className="flex gap-2 mb-4">
                     <input
@@ -525,7 +649,7 @@ export default function Dashboard() {
           </div>
 
           {/* Right Sidebar */}
-          <div className="w-64 bg-[#8B6B4D]/90 border-l-4 border-[#5D4E37] p-4 flex flex-col gap-4">
+          <div className="w-64 bg-[#8B6B4D]/90 border-l-4 border-[#5D4E37] p-4 flex flex-col gap-4 backdrop-blur-sm hidden md:flex">
             
             {/* Calendar Widget */}
             <div className="bg-[#F5E6D3] rounded-xl border-4 border-[#D4C4A8] overflow-hidden">
@@ -585,7 +709,7 @@ export default function Dashboard() {
               <p className="text-xs font-bold text-[#5D4E37] mb-2 text-center" style={{ fontFamily: "'Fredoka', sans-serif" }}>
                 🎨 {language === 'tr' ? 'TEMA' : 'THEME'}
               </p>
-              <div className="flex justify-center gap-2">
+              <div className="flex justify-center gap-2 flex-wrap">
                 {Object.keys(THEMES).map((key) => (
                   <button
                     key={key}
@@ -608,6 +732,13 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Music Player Modal */}
+      <MusicPlayer 
+        isOpen={showMusicPlayer} 
+        onClose={() => setShowMusicPlayer(false)}
+        userLevel={user?.level || 1}
+      />
 
       {/* Ad Modal */}
       <AnimatePresence>
