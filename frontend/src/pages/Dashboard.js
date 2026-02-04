@@ -10,7 +10,7 @@ import { Progress } from '../components/ui/progress';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-const MASCOT_IMAGE = "https://images.unsplash.com/photo-1766465182486-1d558f382494?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NDh8MHwxfHNlYXJjaHwxfHxjdXRlJTIwZmx1ZmZ5JTIwdGVkZHklMjBiZWFyJTIwdG95fGVufDB8fHx8MTc3MDE5NzUyMnww&ixlib=rb-4.1.0&q=85";
+const MASCOT_IMAGE = "/assets/pets/poncik-bear.jpg";
 
 const TIMER_MODES = {
   focus: { duration: 25, label: 'timer_focus' },
