@@ -77,6 +77,14 @@ export default function Dashboard() {
     message_en: 'New Season! Spring Festival Started! 🌸' 
   });
 
+  // Timer complete handler (defined before useEffect)
+  const handleTimerComplete = useCallback(async () => {
+    setIsRunning(false);
+    setShowAdModal(true);
+    setAdCountdown(5);
+    toast.success(language === 'tr' ? '🎉 Seans tamamlandı! Harika iş!' : '🎉 Session complete! Great job!');
+  }, [language]);
+
   // Fetch initial data
   useEffect(() => {
     fetchTodos();
@@ -193,13 +201,6 @@ export default function Dashboard() {
       }
     }
   };
-
-  const handleTimerComplete = useCallback(async () => {
-    setIsRunning(false);
-    setShowAdModal(true);
-    setAdCountdown(5);
-    toast.success(language === 'tr' ? '🎉 Seans tamamlandı! Harika iş!' : '🎉 Session complete! Great job!');
-  }, [language]);
 
   const completeSession = async (doubleCredits = false) => {
     if (!sessionId) return;
