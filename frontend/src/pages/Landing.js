@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Coffee, Clock, Users, Music, Sparkles } from 'lucide-react';
@@ -13,6 +14,7 @@ const features = [
 export default function Landing() {
   const { t, language, toggleLanguage } = useLanguage();
   const { login, setUser } = useAuth();
+  const navigate = useNavigate();
   
   const handleTestLogin = async () => {
     try {
@@ -27,8 +29,8 @@ export default function Landing() {
         setUser(userData); // Set user in context
         // Store in localStorage as backup
         localStorage.setItem('poncik_user', JSON.stringify(userData));
-        // Navigate to dashboard
-        window.location.href = '/dashboard';
+        // Navigate to dashboard with state
+        navigate('/dashboard', { state: { user: userData }, replace: true });
       } else {
         alert('Test login failed. Make sure backend is running!');
       }
