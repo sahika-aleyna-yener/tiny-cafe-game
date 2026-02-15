@@ -51,6 +51,24 @@ export default function MusicPlayer({ isOpen, onClose, userLevel = 1 }) {
     return matchesCategory && matchesSearch;
   });
 
+  // Define playNext before useEffect that uses it
+  const playNext = useCallback(() => {
+    const availableTracks = filteredTracks.filter(t => !t.locked || t.unlockLevel <= userLevel);
+    const currentIndex = availableTracks.findIndex(t => t.id === currentTrack.id);
+    
+    let nextIndex;
+    if (shuffle) {
+      nextIndex = Math.floor(Math.random() * availableTracks.length);
+    } else {
+      nextIndex = (currentIndex + 1) % availableTracks.length;
+    }
+    
+    setCurrentTrack(availableTracks[nextIndex]);
+    if (isPlaying) {
+      setTimeout(() => audioRef.current?.play(), 100);
+    }
+  }, [filteredTracks, userLevel, currentTrack.id, shuffle, isPlaying]);
+
   // Update audio when track changes
   useEffect(() => {
     if (audioRef.current) {
@@ -114,23 +132,6 @@ export default function MusicPlayer({ isOpen, onClose, userLevel = 1 }) {
     setIsPlaying(true);
     setTimeout(() => audioRef.current?.play(), 100);
   };
-
-  const playNext = useCallback(() => {
-    const availableTracks = filteredTracks.filter(t => !t.locked || t.unlockLevel <= userLevel);
-    const currentIndex = availableTracks.findIndex(t => t.id === currentTrack.id);
-    
-    let nextIndex;
-    if (shuffle) {
-      nextIndex = Math.floor(Math.random() * availableTracks.length);
-    } else {
-      nextIndex = (currentIndex + 1) % availableTracks.length;
-    }
-    
-    setCurrentTrack(availableTracks[nextIndex]);
-    if (isPlaying) {
-      setTimeout(() => audioRef.current?.play(), 100);
-    }
-  }, [filteredTracks, userLevel, currentTrack.id, shuffle, isPlaying]);
 
   const playPrev = () => {
     const availableTracks = filteredTracks.filter(t => !t.locked || t.unlockLevel <= userLevel);
