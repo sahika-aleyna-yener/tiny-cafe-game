@@ -9,6 +9,10 @@ import { Progress } from '../components/ui/progress';
 import CafeCharacters from '../components/CafeCharacters';
 import MusicPlayer from '../components/MusicPlayer';
 import CustomerOrders from '../components/CustomerOrders';
+import Shop from '../components/Shop';
+import { bonusTracker } from '../utils/bonusTracker';
+import { InventoryManager } from '../utils/inventoryManager';
+import { notificationManager, soundManager } from '../utils/notificationManager';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
