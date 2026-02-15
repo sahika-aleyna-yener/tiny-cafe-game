@@ -19,6 +19,7 @@ export const BottomNav = () => {
       initial={{ y: 100 }}
       animate={{ y: 0 }}
       className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--surface)] border-t border-[var(--border)] px-2 py-2 md:py-3"
+      style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
     >
       <div className="max-w-lg mx-auto flex justify-around items-center">
         {navItems.map((item) => (

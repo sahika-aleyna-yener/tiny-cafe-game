@@ -8,6 +8,7 @@ import { Checkbox } from '../components/ui/checkbox';
 import { Progress } from '../components/ui/progress';
 import CafeCharacters from '../components/CafeCharacters';
 import MusicPlayer from '../components/MusicPlayer';
+import CustomerOrders from '../components/CustomerOrders';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -327,6 +328,25 @@ export default function Dashboard() {
       
       {/* Animated Cafe Characters */}
       <CafeCharacters language={language} isStudying={isRunning} />
+      
+      {/* Customer Orders System */}
+      <CustomerOrders 
+        language={language} 
+        isActive={isRunning} 
+        onCreditsEarned={async (credits) => {
+          try {
+            await fetch(`${API}/credits/adjust`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ amount: credits }),
+            });
+            await refreshUser();
+          } catch (err) {
+            console.error('Failed to adjust credits:', err);
+          }
+        }}
+      />
       
       {/* Overlay for better readability */}
       <div className="absolute inset-0 bg-black/10" />

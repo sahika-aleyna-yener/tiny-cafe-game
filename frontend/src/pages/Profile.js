@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { Progress } from '../components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import Achievements from '../components/Achievements';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -120,7 +121,7 @@ export default function Profile() {
 
         {/* Tabs */}
         <Tabs defaultValue="stats" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8 bg-[var(--surface)] rounded-full p-1">
+          <TabsList className="grid w-full grid-cols-3 mb-8 bg-[var(--surface)] rounded-full p-1">
             <TabsTrigger
               value="stats"
               className="rounded-full data-[state=active]:bg-[var(--primary)] data-[state=active]:text-[var(--primary-foreground)]"
@@ -128,6 +129,14 @@ export default function Profile() {
             >
               <User className="w-4 h-4 mr-2" />
               {t('profile_stats')}
+            </TabsTrigger>
+            <TabsTrigger
+              value="achievements"
+              className="rounded-full data-[state=active]:bg-[var(--primary)] data-[state=active]:text-[var(--primary-foreground)]"
+              data-testid="tab-achievements"
+            >
+              <Award className="w-4 h-4 mr-2" />
+              {language === 'tr' ? 'Başarımlar' : 'Achievements'}
             </TabsTrigger>
             <TabsTrigger
               value="badges"
@@ -156,6 +165,37 @@ export default function Profile() {
                 </motion.div>
               ))}
             </div>
+          </TabsContent>
+
+          {/* Achievements */}
+          <TabsContent value="achievements">
+            <Achievements 
+              language={language}
+              userStats={{
+                total_sessions: stats?.total_sessions || 0,
+                streak_days: user?.streak_days || 0,
+                total_focus_minutes: user?.total_focus_minutes || 0,
+                level: user?.level || 1,
+                owned_items: user?.owned_items || [],
+                customers_served: stats?.customers_served || 0,
+                quests_completed: stats?.quests_completed || 0
+              }}
+              onClaimAchievement={async (achievement) => {
+                try {
+                  const res = await fetch(`${API}/achievements/claim`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ achievement_id: achievement.id }),
+                  });
+                  if (res.ok) {
+                    fetchData();
+                  }
+                } catch (err) {
+                  console.error('Failed to claim achievement:', err);
+                }
+              }}
+            />
           </TabsContent>
 
           {/* Badges */}

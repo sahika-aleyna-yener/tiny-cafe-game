@@ -1,0 +1,25 @@
+{
+  "short_name": "PoncikFocus",
+  "name": "PoncikFocus - Odaklanma Kafesi",
+  "description": "Odaklanma seansları, tatlılar ve rahatlatıcı müzikle çalış",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#8D6E63",
+  "background_color": "#FFF8E7",
+  "icons": [
+    {
+      "src": "/assets/pets/poncik-bear.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/pets/poncik-bear.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}
