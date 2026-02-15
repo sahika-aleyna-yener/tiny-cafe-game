@@ -12,7 +12,28 @@ const features = [
 
 export default function Landing() {
   const { t, language, toggleLanguage } = useLanguage();
-  const { login } = useAuth();
+  const { login, setUser } = useAuth();
+  
+  const handleTestLogin = async () => {
+    try {
+      const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
+      const res = await fetch(`${BACKEND_URL}/api/auth/test-login`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data.user);
+        window.location.href = '/dashboard';
+      } else {
+        alert('Test login failed. Make sure backend is running!');
+      }
+    } catch (err) {
+      console.error('Test login error:', err);
+      alert('Backend connection failed. Is the server running?');
+    }
+  };
 
   return (
     <div 
@@ -111,12 +132,28 @@ export default function Landing() {
             </div>
           </motion.div>
 
-          {/* Login Button */}
+          {/* Test Login Button (Development) */}
+          <motion.button
+            onClick={handleTestLogin}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            whileHover={{ scale: 1.03, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full flex items-center justify-center gap-3 px-8 py-4 bg-[#81C784] text-white text-lg font-bold rounded-xl border-b-4 border-[#5FA463] hover:bg-[#91D794] transition-colors shadow-lg mb-3"
+            style={{ fontFamily: "'Fredoka', sans-serif" }}
+            data-testid="test-login-btn"
+          >
+            <span className="text-2xl">🧪</span>
+            {language === 'tr' ? 'Test Girişi (Geliştirme)' : 'Test Login (Dev)'}
+          </motion.button>
+
+          {/* Google Login Button */}
           <motion.button
             onClick={login}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
+            transition={{ delay: 0.7 }}
             whileHover={{ scale: 1.03, y: -2 }}
             whileTap={{ scale: 0.98 }}
             className="w-full flex items-center justify-center gap-3 px-8 py-4 bg-[#D4896A] text-white text-lg font-bold rounded-xl border-b-4 border-[#A66B4F] hover:bg-[#E09A7A] transition-colors shadow-lg"

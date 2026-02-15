@@ -878,6 +878,74 @@ async def claim_achievement(achievement_id: str, request: Request):
 async def root():
     return {"message": "PoncikFocus API", "version": "1.0.0"}
 
+@api_router.post("/auth/test-login")
+async def test_login(response: Response):
+    """Test login endpoint - creates a test user and logs them in"""
+    import secrets
+    
+    # Create test user
+    test_user = {
+        "user_id": "test-user-" + secrets.token_hex(8),
+        "email": "test@tinycafe.app",
+        "name": "Test Kullanıcı",
+        "picture": "https://images.unsplash.com/photo-1720351458123-13e188604960?w=200&h=200&fit=crop",
+        "credits": 1000,
+        "level": 5,
+        "xp": 500,
+        "streak_days": 3,
+        "last_study_date": datetime.now(timezone.utc).isoformat(),
+        "total_focus_minutes": 120,
+        "owned_items": ["default_theme"],
+        "active_theme": "sakura",
+        "language": "tr",
+        "is_premium": False,
+        "premium_expires_at": None,
+        "owned_customization": ["skin_default", "outfit_casual", "accessory_none"],
+        "customization": {
+            "skin": "default",
+            "outfit": "casual",
+            "accessory": "none"
+        },
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Create session
+    session_token = secrets.token_urlsafe(32)
+    session = {
+        "user_id": test_user["user_id"],
+        "session_token": session_token,
+        "expires_at": (datetime.now(timezone.utc) + timedelta(days=7)).isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    try:
+        # Save user to database
+        await db.users.insert_one(test_user)
+        
+        # Save session
+        await db.sessions.insert_one(session)
+        
+        # Set cookie
+        response.set_cookie(
+            key="session_token",
+            value=session_token,
+            httponly=True,
+            max_age=7*24*60*60,
+            samesite="lax",
+            secure=False  # Set to True in production with HTTPS
+        )
+        
+        logger.info(f"Test user created and logged in: {test_user['user_id']}")
+        
+        return {
+            "user": test_user,
+            "message": "Test login successful"
+        }
+        
+    except Exception as e:
+        logger.error(f"Test login failed: {e}")
+        raise HTTPException(status_code=500, detail="Test login failed")
+
 # Include router and middleware
 app.include_router(api_router)
 
