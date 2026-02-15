@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Clock, Check, X, Gift } from 'lucide-react';
@@ -59,9 +59,9 @@ export default function CustomerOrders({ onServeComplete, userCredits, onCreditC
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [currentOrder]);
+  }, [currentOrder, handleCustomerLeave]);
 
-  const handleCustomerLeave = () => {
+  const handleCustomerLeave = useCallback(() => {
     if (currentOrder) {
       toast.error(
         language === 'tr'
@@ -71,7 +71,7 @@ export default function CustomerOrders({ onServeComplete, userCredits, onCreditC
       setCurrentOrder(null);
       setTimeLeft(30);
     }
-  };
+  }, [currentOrder, language]);
 
   const handleStartMaking = () => {
     setShowDrinkMaker(true);

@@ -332,19 +332,16 @@ export default function Dashboard() {
       
       {/* Customer Orders System */}
       <CustomerOrders 
-        language={language} 
-        isActive={isRunning} 
-        onCreditsEarned={async (credits) => {
-          try {
-            await fetch(`${API}/credits/adjust`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
-              body: JSON.stringify({ amount: credits }),
-            });
-            await refreshUser();
-          } catch (err) {
-            console.error('Failed to adjust credits:', err);
+        onServeComplete={(result) => {
+          // result: { success, credits, customer, drink }
+          console.log('Serve complete:', result);
+        }}
+        userCredits={user?.credits || 0}
+        onCreditChange={(amount) => {
+          // Local credit update
+          if (user) {
+            const newCredits = Math.max(0, user.credits + amount);
+            setUser({ ...user, credits: newCredits });
           }
         }}
       />
