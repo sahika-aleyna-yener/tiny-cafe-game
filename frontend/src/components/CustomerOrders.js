@@ -11,6 +11,19 @@ export default function CustomerOrders({ onServeComplete, userCredits, onCreditC
   const [timeLeft, setTimeLeft] = useState(30);
   const [showDrinkMaker, setShowDrinkMaker] = useState(false);
 
+  // Define handleCustomerLeave before it's used in useEffect
+  const handleCustomerLeave = useCallback(() => {
+    if (currentOrder) {
+      toast.error(
+        language === 'tr'
+          ? `${currentOrder.customer.name_tr} bekledi ve gitti... 😔`
+          : `${currentOrder.customer.name_en} left... 😔`
+      );
+      setCurrentOrder(null);
+      setTimeLeft(30);
+    }
+  }, [currentOrder, language]);
+
   // Rastgele müşteri gelişi (2-5 dakikada bir)
   useEffect(() => {
     const spawnCustomer = () => {
@@ -60,18 +73,6 @@ export default function CustomerOrders({ onServeComplete, userCredits, onCreditC
 
     return () => clearInterval(timer);
   }, [currentOrder, handleCustomerLeave]);
-
-  const handleCustomerLeave = useCallback(() => {
-    if (currentOrder) {
-      toast.error(
-        language === 'tr'
-          ? `${currentOrder.customer.name_tr} bekledi ve gitti... 😔`
-          : `${currentOrder.customer.name_en} left... 😔`
-      );
-      setCurrentOrder(null);
-      setTimeLeft(30);
-    }
-  }, [currentOrder, language]);
 
   const handleStartMaking = () => {
     setShowDrinkMaker(true);
