@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -59,7 +59,7 @@ export default function MusicPlayer({ isOpen, onClose, userLevel = 1 }) {
         audioRef.current.play();
       }
     }
-  }, [currentTrack]);
+  }, [currentTrack, isPlaying]);
 
   // Update volume
   useEffect(() => {
@@ -95,7 +95,7 @@ export default function MusicPlayer({ isOpen, onClose, userLevel = 1 }) {
       audio.removeEventListener('loadedmetadata', updateProgress);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, [repeat]);
+  }, [repeat, playNext]);
 
   const togglePlay = () => {
     if (currentTrack.locked && currentTrack.unlockLevel > userLevel) return;
@@ -115,7 +115,7 @@ export default function MusicPlayer({ isOpen, onClose, userLevel = 1 }) {
     setTimeout(() => audioRef.current?.play(), 100);
   };
 
-  const playNext = () => {
+  const playNext = useCallback(() => {
     const availableTracks = filteredTracks.filter(t => !t.locked || t.unlockLevel <= userLevel);
     const currentIndex = availableTracks.findIndex(t => t.id === currentTrack.id);
     
@@ -130,7 +130,7 @@ export default function MusicPlayer({ isOpen, onClose, userLevel = 1 }) {
     if (isPlaying) {
       setTimeout(() => audioRef.current?.play(), 100);
     }
-  };
+  }, [filteredTracks, userLevel, currentTrack.id, shuffle, isPlaying]);
 
   const playPrev = () => {
     const availableTracks = filteredTracks.filter(t => !t.locked || t.unlockLevel <= userLevel);

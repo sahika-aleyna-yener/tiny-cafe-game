@@ -167,7 +167,7 @@ export default function Achievements({ language = 'tr', userStats, onClaimAchiev
     };
 
     checkAchievements();
-  }, [userStats]);
+  }, [userStats, unlockedAchievements]);
 
   const checkRequirement = (requirement, stats) => {
     switch (requirement.type) {

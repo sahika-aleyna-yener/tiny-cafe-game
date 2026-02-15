@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -95,7 +95,7 @@ export default function Dashboard() {
       handleTimerComplete();
     }
     return () => clearInterval(interval);
-  }, [isRunning, timeLeft]);
+  }, [isRunning, timeLeft, handleTimerComplete]);
 
   // Motivation messages every 5 minutes while studying
   useEffect(() => {
@@ -194,12 +194,12 @@ export default function Dashboard() {
     }
   };
 
-  const handleTimerComplete = async () => {
+  const handleTimerComplete = useCallback(async () => {
     setIsRunning(false);
     setShowAdModal(true);
     setAdCountdown(5);
     toast.success(language === 'tr' ? '🎉 Seans tamamlandı! Harika iş!' : '🎉 Session complete! Great job!');
-  };
+  }, [language]);
 
   const completeSession = async (doubleCredits = false) => {
     if (!sessionId) return;
