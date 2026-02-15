@@ -23,8 +23,11 @@ export default function Landing() {
       });
       
       if (res.ok) {
-        const data = await res.json();
-        setUser(data.user);
+        const userData = await res.json();
+        setUser(userData); // Set user in context
+        // Store in localStorage as backup
+        localStorage.setItem('poncik_user', JSON.stringify(userData));
+        // Navigate to dashboard
         window.location.href = '/dashboard';
       } else {
         alert('Test login failed. Make sure backend is running!');
