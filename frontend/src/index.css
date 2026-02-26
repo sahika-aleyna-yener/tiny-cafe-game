@@ -5,34 +5,39 @@
 @tailwind utilities;
 
 :root {
-  --background: #FFF8E7;
+  --background: linear-gradient(135deg, #FFF8E7 0%, #FFFCF5 100%);
   --surface: #FFFFFF;
   --surface-highlight: #FFFCF5;
-  --primary: #8D6E63;
+  --primary: linear-gradient(135deg, #D4896A 0%, #C9745F 100%);
   --primary-foreground: #FFFFFF;
-  --secondary: #A5D6A7;
+  --secondary: linear-gradient(135deg, #A5D6A7 0%, #81C784 100%);
   --secondary-foreground: #2E7D32;
-  --accent: #F48FB1;
-  --accent-foreground: #C2185B;
-  --text-main: #4E342E;
+  --accent: linear-gradient(135deg, #FF6B9D 0%, #F48FB1 100%);
+  --accent-foreground: #FFFFFF;
+  --text-main: #3E342E;
   --text-muted: #8D6E63;
-  --border: #E6D6C6;
-  --success: #81C784;
-  --warning: #FFB74D;
-  --error: #E57373;
-  --radius: 1rem;
+  --border: #E0D5CC;
+  --success: #4CAF50;
+  --warning: #FFA726;
+  --error: #EF5350;
+  --radius: 1.25rem;
+  /* Cafe theme colors */
+  --cafe-brown: #8D6E63;
+  --cafe-cream: #F5E6D3;
+  --cafe-rose: #D4896A;
+  --cafe-green: #A5D6A7;
 }
 
 .dark {
-  --background: #2C2420;
+  --background: linear-gradient(135deg, #2C2420 0%, #3E322C 100%);
   --surface: #3E322C;
   --surface-highlight: #4E4038;
-  --primary: #D7CCC8;
+  --primary: linear-gradient(135deg, #D7CCC8 0%, #BCAAA4 100%);
   --primary-foreground: #2C2420;
-  --secondary: #81C784;
+  --secondary: linear-gradient(135deg, #81C784 0%, #66BB6A 100%);
   --secondary-foreground: #1B5E20;
-  --accent: #F06292;
-  --accent-foreground: #AD1457;
+  --accent: linear-gradient(135deg, #FF6B9D 0%, #F06292 100%);
+  --accent-foreground: #FFFFFF;
   --text-main: #EFEBE9;
   --text-muted: #BCAAA4;
   --border: #5D4037;
@@ -46,7 +51,7 @@
 
 body {
   font-family: 'Nunito', sans-serif;
-  background-color: var(--background);
+  background: var(--background);
   color: var(--text-main);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -56,6 +61,7 @@ body {
   padding-right: env(safe-area-inset-right);
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
+  line-height: 1.6;
 }
 
 /* Sabit alt navigasyon: home indicator'ın üstünde kalsın */
@@ -97,6 +103,47 @@ h1, h2, h3, h4, h5, h6 {
 @keyframes pulse-soft {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.7; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes bounce-soft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(212, 137, 106, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(212, 137, 106, 0.6); }
+}
+
+/* Utility classes */
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+  background: linear-gradient(90deg, var(--surface) 25%, var(--surface-highlight) 50%, var(--surface) 75%);
+  background-size: 1000px 100%;
+}
+
+.animate-gradient {
+  animation: gradient-shift 3s ease infinite;
+  background-size: 200% 200%;
+}
+
+.animate-bounce-soft {
+  animation: bounce-soft 2s infinite;
+}
+
+.animate-glow {
+  animation: glow 2s infinite;
 }
 
 @keyframes shake {

@@ -7,6 +7,9 @@ import { toast } from 'sonner';
 import { Checkbox } from '../components/ui/checkbox';
 import { Progress } from '../components/ui/progress';
 import CafeCharacters from '../components/CafeCharacters';
+import PetCompanion from '../components/PetCompanion';
+import SubjectSelectionModal from '../components/SubjectSelectionModal';
+import BreathingExercise from '../components/BreathingExercise';
 import MusicPlayer from '../components/MusicPlayer';
 import CustomerOrders from '../components/CustomerOrders';
 import Shop from '../components/Shop';
@@ -58,6 +61,18 @@ export default function Dashboard() {
   const startTimeRef = useRef(null);
   const [motivationMessage, setMotivationMessage] = useState(null);
   
+  // Pet companion state
+  const [selectedPet, setSelectedPet] = useState(null);
+  const [timerCancelled, setTimerCancelled] = useState(false);
+  const [studyDuration, setStudyDuration] = useState(0); // minutes
+  
+  // Subject selection state
+  const [showSubjectModal, setShowSubjectModal] = useState(false);
+  const [selectedSubject, setSelectedSubject] = useState(null);
+  
+  // Breathing exercise state
+  const [showBreathingModal, setShowBreathingModal] = useState(false);
+  
   // Todos state
   const [todos, setTodos] = useState([]);
   const [newTodo, setNewTodo] = useState('');
@@ -89,12 +104,33 @@ export default function Dashboard() {
     toast.success(language === 'tr' ? '🎉 Seans tamamlandı! Harika iş!' : '🎉 Session complete! Great job!');
   }, [language]);
 
+  // Load equipped pet from inventory
+  const loadEquippedPet = useCallback(() => {
+    if (!user?.user_id) return;
+    const inventory = InventoryManager.loadInventory(user.user_id);
+    const equippedPetId = inventory.equipped.pet;
+    
+    if (equippedPetId) {
+      // Get pet data from inventory
+      const petData = inventory.pets.owned.find(p => p.pet_id === equippedPetId);
+      if (petData) {
+        setSelectedPet({
+          id: petData.pet_id,
+          name: petData.name,
+          image: petData.image,
+          emoji: petData.emoji
+        });
+      }
+    }
+  }, [user?.user_id]);
+
   // Fetch initial data
   useEffect(() => {
     fetchTodos();
     fetchShopItems();
     fetchDailyQuests();
-  }, []);
+    loadEquippedPet();
+  }, [loadEquippedPet]);
 
   // Timer logic
   useEffect(() => {
@@ -171,19 +207,40 @@ export default function Dashboard() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const handleStartTimerClick = () => {
+    // Show subject selection modal first
+    setShowSubjectModal(true);
+  };
+
+  const handleSubjectSelect = (subject) => {
+    setSelectedSubject(subject);
+    // Show AI advice toast
+    toast.info(
+      language === 'tr' ? subject.advice_tr : subject.advice_en,
+      { duration: 5000 }
+    );
+    // Start timer after subject selected
+    handleStartTimer();
+  };
+
   const handleStartTimer = async () => {
     try {
       const res = await fetch(`${API}/focus/start`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ duration_minutes: TIMER_MODES[timerMode].duration }),
+        body: JSON.stringify({ 
+          duration_minutes: TIMER_MODES[timerMode].duration,
+          subject: selectedSubject?.id || 'other'
+        }),
       });
       if (res.ok) {
         const data = await res.json();
         setSessionId(data.session_id);
         setIsRunning(true);
         startTimeRef.current = Date.now();
+        setStudyDuration(TIMER_MODES[timerMode].duration); // Set duration for pet activities
+        setTimerCancelled(false); // Reset guilt state
         toast.success(language === 'tr' ? 'Çalışma başladı! Başarılar! 🎯' : 'Study started! Good luck! 🎯');
       }
     } catch (err) {
@@ -193,10 +250,21 @@ export default function Dashboard() {
   };
 
   const handleStopTimer = () => {
+    const elapsedSeconds = startTimeRef.current 
+      ? Math.floor((Date.now() - startTimeRef.current) / 1000)
+      : 0;
+    const initialDuration = TIMER_MODES[timerMode].duration * 60;
+    const wasCancelledEarly = elapsedSeconds < initialDuration - 60; // More than 1 min early
+    
+    if (wasCancelledEarly && selectedPet) {
+      // Trigger guilt mechanism
+      setTimerCancelled(true);
+      setTimeout(() => setTimerCancelled(false), 5000);
+    }
+    
     setIsRunning(false);
     
     if (sessionId && startTimeRef.current) {
-      const elapsedSeconds = Math.floor((Date.now() - startTimeRef.current) / 1000);
       if (elapsedSeconds >= 10) {
         setShowAdModal(true);
         setAdCountdown(5);
@@ -334,6 +402,15 @@ export default function Dashboard() {
       {/* Animated Cafe Characters */}
       <CafeCharacters language={language} isStudying={isRunning} />
       
+      {/* Pet Companion - Focus Friend style */}
+      <PetCompanion
+        selectedPet={selectedPet}
+        isStudying={isRunning}
+        studyDuration={studyDuration}
+        onTimerCancelled={timerCancelled}
+        language={language}
+      />
+      
       {/* Customer Orders System */}
       <CustomerOrders 
         onServeComplete={(result) => {
@@ -362,7 +439,7 @@ export default function Dashboard() {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={isRunning ? handleStopTimer : handleStartTimer}
+            onClick={isRunning ? handleStopTimer : handleStartTimerClick}
             className={`flex items-center gap-2 px-6 py-3 rounded-lg font-bold text-white shadow-lg border-b-4 transition-all ${
               isRunning 
                 ? 'bg-red-500 border-red-700 hover:bg-red-600' 
@@ -393,6 +470,7 @@ export default function Dashboard() {
 
           {/* Music Control */}
           <div className="flex items-center gap-3">
+            {/* Music Button */}
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
@@ -403,6 +481,20 @@ export default function Dashboard() {
               <Music className="w-5 h-5 text-[#5D4E37]" />
               <span className="text-sm font-semibold text-[#5D4E37] hidden md:block">
                 {language === 'tr' ? 'Müzik' : 'Music'}
+              </span>
+            </motion.button>
+
+            {/* Breathing Exercise Button */}
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setShowBreathingModal(true)}
+              className="p-3 bg-gradient-to-r from-blue-100 to-purple-100 rounded-lg border-2 border-blue-200 hover:from-blue-200 hover:to-purple-200 transition-colors flex items-center gap-2"
+              title={language === 'tr' ? 'Nefes Egzersizi' : 'Breathing Exercise'}
+            >
+              <span className="text-xl">🌬️</span>
+              <span className="text-sm font-semibold text-blue-700 hidden md:block">
+                {language === 'tr' ? 'Rahatla' : 'Relax'}
               </span>
             </motion.button>
           </div>
@@ -760,6 +852,22 @@ export default function Dashboard() {
         isOpen={showMusicPlayer} 
         onClose={() => setShowMusicPlayer(false)}
         userLevel={user?.level || 1}
+      />
+
+      {/* Subject Selection Modal */}
+      <SubjectSelectionModal
+        isOpen={showSubjectModal}
+        onClose={() => setShowSubjectModal(false)}
+        onSelectSubject={handleSubjectSelect}
+        language={language}
+        selectedSubject={selectedSubject}
+      />
+
+      {/* Breathing Exercise Modal */}
+      <BreathingExercise
+        isOpen={showBreathingModal}
+        onClose={() => setShowBreathingModal(false)}
+        language={language}
       />
 
       {/* Ad Modal */}
